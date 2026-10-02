@@ -60,6 +60,7 @@ import { Viewer } from "./viewer.js";
 
   /* ---------- 3D board ---------- */
   const viewer = new Viewer($("viewport"), $("labels"));
+  window.kitbuilderViewer = viewer; // handy for debugging in the console
   viewer.onSlotClick = (id) => { state.slot = id; render(); };
 
   let loadSeq = 0;

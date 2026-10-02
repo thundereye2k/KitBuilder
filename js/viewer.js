@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 const DEG = Math.PI / 180;
@@ -26,7 +28,9 @@ export class Viewer {
   constructor(container, labelLayer) {
     this.container = container;
     this.labelLayer = labelLayer;
-    this.loader = new GLTFLoader();
+    // GLBs exported with Draco or meshopt compression are supported
+    const draco = new DRACOLoader().setDecoderPath(new URL("./vendor/addons/libs/draco/gltf/", import.meta.url).href);
+    this.loader = new GLTFLoader().setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder);
     this.cache = new Map();
     this.slots = {};          // slotId -> { def, anchor, marker, label, part }
     this.activeSlot = null;
@@ -91,18 +95,31 @@ export class Viewer {
       catch (e) { console.warn(`Weapon model failed: ${weapon.model}`, e); }
     }
     if (token !== this.token) return;
-    if (gltfRoot) body.add(gltfRoot); else body.add(this.placeholderBody(weapon.category));
+    if (gltfRoot) {
+      // optional weapon-level fix-ups: scale, rot (deg), offset (m), hide (node names)
+      const wrap = new THREE.Group();
+      wrap.add(gltfRoot);
+      if (weapon.scale) wrap.scale.setScalar(weapon.scale);
+      if (weapon.rot) wrap.rotation.set(weapon.rot[0] * DEG, weapon.rot[1] * DEG, weapon.rot[2] * DEG);
+      if (weapon.offset) wrap.position.fromArray(weapon.offset);
+      (weapon.hide || []).forEach((name) => { const n = gltfRoot.getObjectByName(name); if (n) n.visible = false; });
+      body.add(wrap);
+    } else body.add(this.placeholderBody(weapon.category));
+    body.updateMatrixWorld(true);
 
     weapon.slots.forEach((def) => {
       const a = def.anchor || { pos: [0, 0, 0], rot: [0, 0, 0], size: [0.05, 0.05, 0.05] };
       const anchor = new THREE.Group();
-      // anchor empty from the GLB wins over data.js
+      body.add(anchor);
+      // an anchor empty from the GLB wins over data.js (position + rotation only, so parts keep real-world scale)
       const node = gltfRoot && gltfRoot.getObjectByName(`slot_${def.id}`);
-      if (node) { node.add(anchor); }
-      else {
+      if (node) {
+        const m = new THREE.Matrix4().copy(body.matrixWorld).invert().multiply(node.matrixWorld);
+        const s = new THREE.Vector3();
+        m.decompose(anchor.position, anchor.quaternion, s);
+      } else {
         anchor.position.fromArray(a.pos);
         anchor.rotation.set(a.rot[0] * DEG, a.rot[1] * DEG, a.rot[2] * DEG);
-        body.add(anchor);
       }
       const marker = this.makeMarker(def.type, a.size);
       marker.userData.slotId = def.id;
