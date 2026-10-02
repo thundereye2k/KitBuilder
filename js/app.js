@@ -101,7 +101,11 @@ import { Viewer } from "./viewer.js";
       <div class="bar"><i style="width:${pct}%"></i></div></div>`;
   }
 
+  const showStats = () => D.categories.find((c) => c.id === weapon().category).showStats !== false;
+
   function renderStats() {
+    $("stats").hidden = !showStats();
+    if (!showStats()) return;
     const w = weapon(), t = computeStats(), b = w.base;
     $("stats").innerHTML =
       statCard("Ergonomics", t.ergo, b.ergo, (n) => n.toFixed(0), false, 100) +
@@ -159,8 +163,8 @@ import { Viewer } from "./viewer.js";
       b.className = "part" + (on ? " on" : "");
       const thumb = p ? (p.thumb ? `<img src="${p.thumb}" alt="">` : `<span style="background:${p.color || "#52525b"}"></span>`) : "";
       b.innerHTML = `<div class="thumb">${thumb}</div>
-        <div><div class="nm">${p ? p.name : "None"}</div><div class="mods">${p ? modsHtml(p) : "Leave slot empty"}</div></div>
-        <div class="pr">${p ? money(p.price || 0) : ""}</div>`;
+        <div><div class="nm">${p ? p.name : "None"}</div><div class="mods">${p ? (showStats() ? modsHtml(p) : "") : "Leave slot empty"}</div></div>
+        <div class="pr">${p && showStats() ? money(p.price || 0) : ""}</div>`;
       b.onclick = () => setPart(slot.id, p ? p.id : null);
       li.appendChild(b);
       list.appendChild(li);

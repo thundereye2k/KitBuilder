@@ -88,3 +88,6 @@ button{font:inherit;color:inherit;cursor:pointer}
   .part-list{max-height:none}
 }
 @media (max-width:560px){ .stats{grid-template-columns:repeat(2,1fr)} .top{gap:10px} }
+
+[hidden]{display:none!important}
+.part .mods:empty{display:none}

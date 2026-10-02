@@ -6,6 +6,9 @@
  *   Part    : origin = its MOUNT POINT. It is placed at the slot anchor, so model each part
  *             with the mount point at (0,0,0) and the same axes as the weapon.
  *
+ * CATEGORY
+ *   id, name, showStats (default true) -> set false to hide ergonomics/recoil/weight/price for that category
+ *
  * WEAPON
  *   id, name, category, caliber, base { ergo, recoil, weight, price }
  *   model  (optional) -> models/weapons/<file>.glb
@@ -24,9 +27,9 @@
  */
 window.KITBUILDER_DATA = {
   categories: [
-    { id: "rifle",  name: "Rifles" },
-    { id: "smg",    name: "SMGs" },
-    { id: "pistol", name: "Pistols" }
+    { id: "rifle",  name: "Rifles",  showStats: false },
+    { id: "smg",    name: "SMGs",    showStats: false },
+    { id: "pistol", name: "Pistols", showStats: false }
   ],
 
   slotTypes: {
