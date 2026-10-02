@@ -47,4 +47,14 @@ Every weapon and part already has `model: "<id>.glb"` filled in, so the quickest
 
 Anything without a model renders as a placeholder shape sized from the slot's `anchor.size`, so models can be added gradually. Optional `thumb: "path.png"` on a part sets its list thumbnail.
 
+### Converting OBJ + MTL to GLB
+
+```
+cd tools && npm install            # once
+node convert.js path/to/model.obj  # writes model.glb next to it, MTL colours/textures included
+node convert.js path/to/folder --scale 0.001 --up Z
+```
+
+`--scale` converts units to metres (mm `0.001`, cm `0.01`, inch `0.0254`); `--up` sets the source up axis. OBJ cannot carry the `slot_*` empties, so add those in Blender (import the OBJ, add Empties, export GLB) or rely on the `anchor` values in `data.js`.
+
 Draco/meshopt-compressed GLBs are not wired up yet.

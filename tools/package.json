@@ -1,0 +1,7 @@
+{
+  "name": "kitbuilder-tools",
+  "private": true,
+  "description": "Helper scripts for preparing models",
+  "scripts": { "convert": "node convert.js" },
+  "dependencies": { "obj2gltf": "^3.1.6" }
+}
