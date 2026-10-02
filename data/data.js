@@ -77,7 +77,7 @@ window.KITBUILDER_DATA = {
         { id: "underbarrel", type: "underbarrel", name: "Underbarrel", anchor: { pos: [0.2, -0.018, 0], rot: [0, 0, 0], size: [0.064, 0.08, 0.03] } },
         { id: "grip",     type: "grip",      name: "Pistol Grip", anchor: { pos: [-0.046, -0.045, 0], rot: [0, 0, 0], size: [0.064, 0.088, 0.04] }, default: "grip-a2" },
         { id: "magazine", type: "magazine",  name: "Magazine",    anchor: { pos: [0.035, -0.01, 0], rot: [0, 0, 0], size: [0.064, 0.112, 0.035] }, default: "pmag-30" },
-        { id: "stock",    type: "stock",     name: "Stock",       anchor: { pos: [-0.104, 0.002, 0], rot: [0, 0, 0], size: [0.216, 0.088, 0.05] }, default: "stock-fixed" }
+        { id: "stock",    type: "stock",     name: "Stock",       anchor: { pos: [-0.104, -0.0072, 0], rot: [0, 0, 0], size: [0.216, 0.088, 0.05] }, default: "stock-fixed" }
       ]
     },
     {
@@ -107,7 +107,7 @@ window.KITBUILDER_DATA = {
         { id: "underbarrel", type: "underbarrel", name: "Underbarrel", anchor: { pos: [0.128, -0.016, 0], rot: [0, 0, 0], size: [0.064, 0.08, 0.03] } },
         { id: "grip",     type: "grip",      name: "Pistol Grip", anchor: { pos: [-0.032, -0.02, 0], rot: [0, 0, 0], size: [0.064, 0.088, 0.04] }, default: "grip-a2" },
         { id: "magazine", type: "magazine",  name: "Magazine",    anchor: { pos: [0.036, -0.02, 0], rot: [0, 0, 0], size: [0.056, 0.112, 0.035] }, default: "mag-30-9" },
-        { id: "stock",    type: "stock",     name: "Stock",       anchor: { pos: [-0.08, -0.008, 0], rot: [0, 0, 0], size: [0.2, 0.08, 0.05] }, default: "stock-collapsible" }
+        { id: "stock",    type: "stock",     name: "Stock",       anchor: { pos: [-0.06, -0.008, 0], rot: [0, 0, 0], size: [0.2, 0.08, 0.05] }, default: "stock-collapsible" }
       ]
     },
     {
@@ -189,7 +189,7 @@ window.KITBUILDER_DATA = {
 
     /* ---- Stocks ---- */
     { id: "stock-fixed", model: "stock-fixed.glb",       name: "Fixed Stock",       type: "stock", fits: LONG, ergo: 0, recoil: 0, weight: 0.35, price: 60, color: "#3f3f46" },
-    { id: "stock-collapsible", model: "AR_15_B5_stock.glb", name: "Collapsible Stock", type: "stock", fits: LONG, ergo: 3, recoil: 6, weight: 0.28, price: 110, color: "#52525b" },
+    { id: "stock-collapsible", model: "AR_15_B5_stock.glb", scale: 0.01, rot: [0, -90, 0], offset: [0.2361, 0.0072, 0], name: "Collapsible Stock", type: "stock", fits: LONG, ergo: 3, recoil: 6, weight: 0.28, price: 110, color: "#52525b" },
     { id: "stock-skeleton", model: "stock-skeleton.glb",    name: "Skeleton Stock",    type: "stock", fits: LONG, ergo: 6, recoil: 12, weight: 0.20, price: 190, color: "#6b7280" },
     { id: "stock-none", model: "stock-none.glb",        name: "Brace Delete",      type: "stock", fits: ["smgs"], ergo: 8, recoil: 40, weight: 0.0, price: 0, color: "#000000", size: [0.016, 0.032] },
 
