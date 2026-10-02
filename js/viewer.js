@@ -178,7 +178,7 @@ export class Viewer {
       label.textContent = def.name;
       this.labelLayer.appendChild(label);
 
-      this.slots[def.id] = { def, anchor, marker, label, part: null, partObj: null };
+      this.slots[def.id] = { def, anchor, marker, label, part: null, partObj: null, baseX: anchor.position.x };
     });
 
     this.fit();
@@ -217,6 +217,59 @@ export class Viewer {
       s.partObj = obj;
     }
     this.refreshMarkers();
+  }
+
+
+  /* ---------- sliding along a rail ----------
+   * All numbers are "shifts" in metres relative to the slot's default position along X. */
+  shiftSlot(slotId, dx) {
+    const s = this.slots[slotId];
+    if (s) s.anchor.position.x = s.baseX + dx;
+  }
+
+  /**
+   * Where may the part in `slotId` sit? Bounded by the rail (receiver + installed handguard) and by every
+   * other installed attachment whose bounding box would overlap it. Returns null if the slot has no rail
+   * or no part. `allowed` is a list of [from, to] shift ranges (empty when there is no room at all).
+   */
+  railInfo(slotId) {
+    const s = this.slots[slotId];
+    const rail = s && s.def.rail;
+    if (!rail || !s.partObj) return null;
+    this.body.updateMatrixWorld(true);
+    const box = (o) => new THREE.Box3().setFromObject(o);
+    const A = box(s.partObj);
+    const mx = s.anchor.position.x, base = s.baseX;
+    const relMin = A.min.x - mx, relMax = A.max.x - mx;
+
+    let railMax = rail.max;
+    const ext = rail.extend && this.slots[rail.extend];
+    if (ext && ext.partObj) railMax = Math.max(railMax, box(ext.partObj).max.x);
+    const lo = rail.min - relMin - base, hi = railMax - relMax - base;
+
+    const EPS = 0.001; // 1 mm: touching is fine, overlapping is not
+    const blocked = [];
+    for (const id in this.slots) {
+      if (id === slotId || id === rail.extend) continue;
+      const o = this.slots[id];
+      if (!o.partObj) continue;
+      const B = box(o.partObj);
+      const overlapYZ = A.min.y < B.max.y - EPS && A.max.y > B.min.y + EPS && A.min.z < B.max.z - EPS && A.max.z > B.min.z + EPS;
+      if (overlapYZ) blocked.push([B.min.x - relMax - base, B.max.x - relMin - base, o.def.name]);
+    }
+    blocked.sort((a, b) => a[0] - b[0]);
+
+    let allowed = hi >= lo ? [[lo, hi]] : [];
+    for (const [a, b] of blocked) {
+      allowed = allowed.flatMap(([x, y]) => {
+        if (b <= x || a >= y) return [[x, y]];
+        const out = [];
+        if (a > x) out.push([x, a]);
+        if (b < y) out.push([b, y]);
+        return out;
+      });
+    }
+    return { lo, hi, cur: mx - base, blocked, allowed };
   }
 
   setActive(slotId) { this.activeSlot = slotId; this.refreshMarkers(); }

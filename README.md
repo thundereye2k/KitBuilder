@@ -18,6 +18,20 @@ Or deploy the folder as-is to GitHub Pages / Netlify / Cloudflare Pages / any st
 - **Parts**: add to `parts[]`. `type` must match a slot type; `fits` is `"*"` or a list of weapon ids / category ids. `ergo`, `recoil`, `weight`, `price` are deltas.
 - **Categories / slot types**: `categories[]`, `slotTypes{}`.
 
+## Sliding parts along a rail
+
+A slot with a `rail` in `data/data.js` gets a **Position on rail** slider (plus ◀ ▶ nudge buttons and "Reset position") in the parts panel once a part is installed. Currently the optic slot of every weapon has one.
+
+```js
+{ id: "optic", type: "optic", ..., rail: { min: -0.097, max: 0.1, extend: "handguard" } }
+```
+
+- `min` / `max`: start and end of the rail along the barrel (metres, weapon space).
+- `extend: "handguard"`: the rail continues to the end of the installed handguard (a shorter handguard means a shorter rail).
+- The part is kept inside the rail using its real model size, and cannot overlap any other installed attachment (flashlight, laser, underbarrel, ...). Blocked stretches show as red stripes on the slider, and a part that would no longer fit is moved or the change is refused with a message.
+- Collision uses the bounding box of each part, so it is slightly conservative for oddly shaped models.
+- The position is saved in the share link (`pos_optic=<mm>`) and in the exported JSON.
+
 ## Model folders
 
 Models are organised by category. The same categories are the tabs / slot names in the site (defined in `categories` and `slotTypes` in `data/data.js`).

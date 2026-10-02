@@ -43,6 +43,16 @@
     <aside class="panel parts">
       <h2 id="parts-title">Select a slot</h2>
       <div id="slot-tabs" class="slot-tabs"></div>
+      <div id="rail-ctl" class="rail" hidden>
+        <div class="rail-head"><span>Position on rail</span><output id="rail-val">Default</output></div>
+        <div class="rail-row">
+          <button id="rail-back" class="rail-btn" aria-label="Move towards the stock">◀</button>
+          <div class="rail-track"><div id="rail-blocked" class="rail-blocked"></div><input id="rail-range" type="range" step="1" aria-label="Position along the rail"></div>
+          <button id="rail-fwd" class="rail-btn" aria-label="Move towards the muzzle">▶</button>
+        </div>
+        <div class="rail-ends"><span>Stock</span><button id="rail-center" class="link">Reset position</button><span>Muzzle</span></div>
+        <p id="rail-note" class="rail-note"></p>
+      </div>
       <ul id="part-list" class="part-list"></ul>
     </aside>
   </main>

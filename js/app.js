@@ -12,7 +12,7 @@ import { Viewer } from "./viewer.js";
   D.parts.forEach((p) => { p.model = inFolder("models/parts", D.slotTypes[p.type].folder, p.model); });
   const $ = (id) => document.getElementById(id);
 
-  const state = { category: D.categories[0].id, weaponId: null, parts: {}, slot: null, labels: false };
+  const state = { category: D.categories[0].id, weaponId: null, parts: {}, shift: {}, slot: null, labels: false };
 
   const weapon = () => D.weapons.find((w) => w.id === state.weaponId);
   const partById = (id) => D.parts.find((p) => p.id === id);
@@ -22,7 +22,7 @@ import { Viewer } from "./viewer.js";
   const sign = (n, d = 0) => (n > 0 ? "+" : "") + n.toFixed(d);
 
   /* ---------- state ---------- */
-  function selectWeapon(id, parts) {
+  function selectWeapon(id, parts, shifts) {
     const w = D.weapons.find((x) => x.id === id) || D.weapons[0];
     state.weaponId = w.id;
     state.category = w.category;
@@ -32,17 +32,125 @@ import { Viewer } from "./viewer.js";
       const p = wanted && partById(wanted);
       state.parts[s.id] = p && p.type === s.type && fits(p, w) ? p.id : null;
     });
+    state.shift = {};
+    w.slots.forEach((s) => { if (s.rail && shifts && shifts[s.id]) state.shift[s.id] = shifts[s.id]; });
     state.slot = w.slots[0].id;
     render();
     loadWeapon3D();
   }
 
+  // Parts are changed one at a time so a slow model download cannot overlap the next click.
+  let queue = Promise.resolve();
   function setPart(slotId, partId) {
+    queue = queue.then(() => applyPart(slotId, partId)).catch((e) => console.warn(e));
+  }
+
+  async function applyPart(slotId, partId) {
+    const prev = state.parts[slotId] || null;
+    const wasShift = { ...state.shift };
     state.parts[slotId] = partId;
     state.slot = slotId;
     render();
-    viewer.setPart(slotId, partId ? partById(partId) : null);
+    await viewer.setPart(slotId, partId ? partById(partId) : null);
+    const r = reflow();
+    if (!r.ok) {
+      // no room on the rail: put the previous part back
+      state.parts[slotId] = prev;
+      state.shift = wasShift;
+      await viewer.setPart(slotId, prev ? partById(prev) : null);
+      reflow();
+      toast(`No room for ${partById(partId).name}: it would overlap another part or not fit the rail`);
+    } else if (r.moved.length && !(weapon().slots.find((s) => s.id === slotId) || {}).rail) {
+      toast(`${r.moved.join(", ")} moved to make room`);
+    }
+    render();
   }
+
+  /* ---------- rail sliders ---------- */
+  const MM = 0.001;
+
+  /** Closest allowed shift to x. dir > 0 / < 0 means "keep moving that way past blocked zones". */
+  function snap(info, x, dir) {
+    const al = info.allowed;
+    if (!al.length) return null;
+    for (const [a, b] of al) if (x >= a - 1e-9 && x <= b + 1e-9) return Math.min(b, Math.max(a, x));
+    if (dir > 0) { for (const [a] of al) if (a > x) return a; }
+    if (dir < 0) { for (let i = al.length - 1; i >= 0; i--) if (al[i][1] < x) return al[i][1]; }
+    let best = null, bd = Infinity;
+    for (const [a, b] of al) for (const e of [a, b]) if (Math.abs(e - x) < bd) { bd = Math.abs(e - x); best = e; }
+    return best;
+  }
+
+  /** Re-check every sliding part against the rail and its neighbours; nudge it if it no longer fits. */
+  function reflow() {
+    const moved = [];
+    let ok = true;
+    weapon().slots.filter((s) => s.rail).forEach((s) => {
+      const info = viewer.railInfo(s.id);
+      if (!info) { delete state.shift[s.id]; return; }
+      const target = snap(info, state.shift[s.id] || 0, 0);
+      if (target === null) { ok = false; return; }
+      if (Math.abs(target - info.cur) > 0.5 * MM) {
+        if (Math.abs(target - (state.shift[s.id] || 0)) > 1.5 * MM) moved.push(s.name);
+        viewer.shiftSlot(s.id, target);
+      }
+      if (Math.abs(target) > 0.5 * MM) state.shift[s.id] = target; else delete state.shift[s.id];
+    });
+    return { ok, moved };
+  }
+
+  const rail = { slot: null, info: null };
+
+  function renderRail() {
+    const box = $("rail-ctl");
+    const w = weapon();
+    const slot = w.slots.find((s) => s.id === state.slot);
+    const info = slot && slot.rail && state.parts[slot.id] ? viewer.railInfo(slot.id) : null;
+    rail.slot = info ? slot : null;
+    rail.info = info;
+    box.hidden = !info;
+    if (!info) return;
+
+    const range = $("rail-range");
+    const lo = Math.ceil(info.lo / MM - 1e-6), hi = Math.floor(info.hi / MM + 1e-6);
+    range.min = lo;
+    range.max = Math.max(lo, hi);
+    range.value = Math.round(info.cur / MM);
+    range.disabled = !info.allowed.length || info.allowed.every(([a, b]) => b - a < MM);
+    // red stripes = where another attachment is in the way
+    const span = Math.max(info.hi - info.lo, 1e-6);
+    $("rail-blocked").innerHTML = info.blocked.map(([a, b, name]) => {
+      const l = Math.max(0, (a - info.lo) / span), r = Math.min(1, (b - info.lo) / span);
+      return r > l ? `<i style="left:${l * 100}%;width:${(r - l) * 100}%" title="${name}"></i>` : "";
+    }).join("");
+    const crowd = info.blocked.filter(([a, b]) => b > info.lo && a < info.hi).map((x) => x[2]);
+    $("rail-note").textContent = range.disabled
+      ? "This part fits in one spot only."
+      : crowd.length ? `Red areas are blocked by: ${[...new Set(crowd)].join(", ")}.` : "Slides along the receiver and handguard rail.";
+    updateRailLabel(info.cur);
+  }
+
+  function updateRailLabel(x) {
+    const mm = Math.round(x / MM);
+    $("rail-val").textContent = mm === 0 ? "Default" : `${mm > 0 ? "+" : ""}${mm} mm`;
+  }
+
+  function moveRail(x, dir) {
+    if (!rail.info) return;
+    const t = snap(rail.info, x, dir);
+    if (t === null) return;
+    $("rail-range").value = Math.round(t / MM);
+    rail.info.cur = t;
+    if (Math.abs(t) > 0.5 * MM) state.shift[rail.slot.id] = t; else delete state.shift[rail.slot.id];
+    viewer.shiftSlot(rail.slot.id, t);
+    updateRailLabel(t);
+    writeHash();
+  }
+
+  $("rail-range").addEventListener("input", (e) => moveRail(e.target.value * MM, 0));
+  $("rail-back").onclick = () => moveRail(rail.info.cur - 5 * MM, -1);
+  $("rail-fwd").onclick = () => moveRail(rail.info.cur + 5 * MM, 1);
+  $("rail-center").onclick = () => moveRail(0, 0);
 
   /* ---------- stats ---------- */
   function computeStats() {
@@ -69,7 +177,11 @@ import { Viewer } from "./viewer.js";
     await viewer.setWeapon(w);
     if (seq !== loadSeq) return;
     await Promise.all(w.slots.map((s) => viewer.setPart(s.id, state.parts[s.id] ? partById(state.parts[s.id]) : null)));
+    if (seq !== loadSeq) return;
+    reflow();
     viewer.setActive(state.slot);
+    renderRail();
+    writeHash();
   }
 
   /* ---------- panels ---------- */
@@ -204,23 +316,31 @@ import { Viewer } from "./viewer.js";
     renderStats();
     renderBuildList();
     renderParts();
+    renderRail();
     writeHash();
   }
 
   /* ---------- share / export ---------- */
+  let lastHash = "";
   function writeHash() {
     const q = new URLSearchParams({ w: state.weaponId });
     for (const k in state.parts) q.set(k, state.parts[k] || "none");
-    history.replaceState(null, "", "#" + q.toString());
+    for (const k in state.shift) q.set("pos_" + k, Math.round(state.shift[k] / MM));
+    lastHash = q.toString();
+    history.replaceState(null, "", "#" + lastHash);
   }
 
   function readHash() {
     const q = new URLSearchParams(location.hash.slice(1));
     const id = q.get("w");
     if (!id || !D.weapons.some((w) => w.id === id)) return false;
-    const parts = {};
-    q.forEach((v, k) => { if (k !== "w") parts[k] = v === "none" ? null : v; });
-    selectWeapon(id, parts);
+    const parts = {}, shifts = {};
+    q.forEach((v, k) => {
+      if (k === "w") return;
+      if (k.startsWith("pos_")) shifts[k.slice(4)] = (parseFloat(v) || 0) * MM;
+      else parts[k] = v === "none" ? null : v;
+    });
+    selectWeapon(id, parts, shifts);
     return true;
   }
 
@@ -247,7 +367,11 @@ import { Viewer } from "./viewer.js";
     const w = weapon(), t = computeStats();
     const out = {
       weapon: w.name, caliber: w.caliber, stats: t,
-      parts: w.slots.map((s) => ({ slot: s.name, part: state.parts[s.id] ? partById(state.parts[s.id]).name : null }))
+      parts: w.slots.map((s) => ({
+        slot: s.name,
+        part: state.parts[s.id] ? partById(state.parts[s.id]).name : null,
+        ...(state.shift[s.id] ? { shiftMm: Math.round(state.shift[s.id] / MM) } : {})
+      }))
     };
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
@@ -256,9 +380,7 @@ import { Viewer } from "./viewer.js";
     URL.revokeObjectURL(a.href);
   };
 
-  window.addEventListener("hashchange", () => {
-    if (location.hash.slice(1) !== new URLSearchParams(Object.assign({ w: state.weaponId }, Object.fromEntries(Object.entries(state.parts).map(([k, v]) => [k, v || "none"])))).toString()) readHash();
-  });
+  window.addEventListener("hashchange", () => { if (location.hash.slice(1) !== lastHash) readHash(); });
 
   if (!readHash()) selectWeapon(D.weapons.find((w) => w.category === state.category).id);
 })();
