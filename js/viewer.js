@@ -24,6 +24,54 @@ const BODY = {
   pistols: { recv: [0.264, 0.02, 0.03, -0.004, 0.006] }
 };
 
+
+/* ---------- material clean-up ----------
+ * Many downloaded models (e.g. Sketchfab exports) mark every material as alphaMode BLEND even when the
+ * texture has no transparency. Blended materials do not write depth, so triangles are drawn in the wrong
+ * order and the model flickers / shows inner parts through the outside ("glitching texture").
+ * Fix: a BLEND material whose texture is fully opaque is made opaque - except on flat quads
+ * (reticles, decals, glass), which are kept blended and drawn last.
+ */
+const opaqueCache = new WeakMap();
+function textureIsOpaque(tex) {
+  const img = tex && tex.image;
+  if (!img) return false;
+  if (opaqueCache.has(img)) return opaqueCache.get(img);
+  let opaque = false;
+  try {
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, 64, 64);
+    const d = ctx.getImageData(0, 0, 64, 64).data;
+    opaque = true;
+    for (let i = 3; i < d.length; i += 4) if (d[i] < 250) { opaque = false; break; }
+  } catch (e) { opaque = false; }
+  opaqueCache.set(img, opaque);
+  return opaque;
+}
+
+function isFlat(geometry) {
+  geometry.computeBoundingBox();
+  const s = geometry.boundingBox.getSize(new THREE.Vector3()).toArray().sort((a, b) => a - b);
+  return s[2] > 0 && s[0] / s[2] < 0.03;
+}
+
+function fixBlendMaterials(root) {
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    const out = mats.map((m) => {
+      if (!m.transparent || m.opacity < 1 || m.alphaMap || !textureIsOpaque(m.map)) return m;
+      const c = m.clone();
+      if (isFlat(o.geometry)) { c.depthWrite = false; o.renderOrder = 1; }
+      else { c.transparent = false; c.depthWrite = true; c.alphaTest = 0; }
+      return c;
+    });
+    o.material = Array.isArray(o.material) ? out : out[0];
+  });
+}
+
 export class Viewer {
   constructor(container, labelLayer) {
     this.container = container;
@@ -183,7 +231,7 @@ export class Viewer {
   }
 
   async load(url) {
-    if (!this.cache.has(url)) this.cache.set(url, this.loader.loadAsync(url).then((g) => g.scene));
+    if (!this.cache.has(url)) this.cache.set(url, this.loader.loadAsync(url).then((g) => { fixBlendMaterials(g.scene); return g.scene; }));
     return this.cache.get(url);
   }
 
