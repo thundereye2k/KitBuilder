@@ -22,10 +22,12 @@ Or deploy the folder as-is to GitHub Pages / Netlify / Cloudflare Pages / any st
 
 | | PC | Phone / tablet |
 |---|---|---|
-| Rotate | left mouse drag | one finger |
-| Move the view | **right mouse drag** (or Shift + left drag) | **two fingers** drag |
+| Rotate | left mouse drag | one finger (**Rotate** mode) |
+| Move the view | **right mouse drag** (or Shift + left drag) | switch to **Move** mode (button in the view), then drag with one finger |
 | Zoom | scroll wheel (or middle-drag) | pinch |
 | Reset | "Reset view" button | "Reset view" button |
+
+The **Rotate / Move** switch in the bottom-right of the view changes what a plain drag does (mouse and touch). Two fingers also move the view while pinching.
 
 The view can be moved up to about 30 cm past the weapon, so it can't be lost off screen.
 

@@ -34,7 +34,10 @@
         <div class="actions"><button id="btn-view" class="btn ghost">Reset view</button><button id="btn-labels" class="btn ghost" aria-pressed="false">Slot labels</button></div>
       </div>
       <div class="stage"><div id="viewport" class="viewport"></div><div id="labels" class="labels"></div>
-        <div class="hint"><span class="h-d">Drag to rotate · right-drag to move · scroll to zoom · click a part</span><span class="h-t">1 finger rotate · 2 fingers move &amp; zoom · tap a part</span></div></div>
+        <div class="view-mode" role="group" aria-label="What dragging does">
+          <button id="mode-rotate" class="on" aria-pressed="true">Rotate</button><button id="mode-move" aria-pressed="false">Move</button>
+        </div>
+        <div class="hint"><span class="h-d">Drag to rotate · right-drag to move · scroll to zoom · click a part</span><span class="h-t">Drag · pinch to zoom</span></div></div>
 
       <div id="stats" class="stats"></div>
       <div id="build-list" class="build-list"></div>

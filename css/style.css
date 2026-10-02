@@ -184,3 +184,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .rail-ends{display:flex;justify-content:space-between;align-items:center;margin-top:2px;font:11px var(--mono);color:var(--muted)}
 .rail .link{background:none;border:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer;padding:4px 8px}
 .rail-note{margin:6px 0 0;font-size:12px;color:var(--muted)}
+
+/* Rotate / Move switch in the 3D view (thumb-friendly, bottom right) */
+.view-mode{position:absolute;right:10px;bottom:10px;display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:rgba(14,16,19,.85);backdrop-filter:blur(4px)}
+.view-mode button{background:none;border:0;color:var(--muted);padding:9px 14px;min-height:40px;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.view-mode button.on{background:var(--accent);color:#17120a}
+@media (max-width:900px){ .view-mode button{padding:10px 16px;min-height:44px} .hint{max-width:calc(100% - 190px)} }

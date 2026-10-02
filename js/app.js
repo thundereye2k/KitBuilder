@@ -354,6 +354,13 @@ import { Viewer } from "./viewer.js";
   }
 
   $("btn-view").onclick = () => viewer.resetView();
+  const setMode = (m) => {
+    viewer.setMode(m);
+    $("mode-rotate").classList.toggle("on", m === "rotate"); $("mode-rotate").setAttribute("aria-pressed", m === "rotate");
+    $("mode-move").classList.toggle("on", m === "move");     $("mode-move").setAttribute("aria-pressed", m === "move");
+  };
+  $("mode-rotate").onclick = () => setMode("rotate");
+  $("mode-move").onclick = () => setMode("move");
   $("btn-reset").onclick = () => selectWeapon(state.weaponId);
   $("btn-labels").onclick = (e) => {
     state.labels = !state.labels;
