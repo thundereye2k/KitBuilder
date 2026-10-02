@@ -41,7 +41,7 @@ models/
 ├── weapons/
 │   ├── assault-rifles/   dmrs/   smgs/   sniper-rifles/   pistols/   lmgs/   shotguns/
 └── parts/
-    ├── muzzle/   handguard/   optic/   stock/   pistol-grip/   magazine/
+    ├── barrel/   muzzle/   handguard/   optic/   stock/   pistol-grip/   magazine/
     └── flashlight/   laser/   underbarrel/   slide/
 ```
 
@@ -55,6 +55,8 @@ Conventions: metres, Y up, barrel pointing **+X**, weapon's right side **+Z**.
 Put an *empty node* in the GLB for every attachment point and name it `slot_<slotId>`: `slot_muzzle`, `slot_handguard`, `slot_optic`, `slot_flashlight`, `slot_laser`, `slot_underbarrel`, `slot_grip`, `slot_magazine`, `slot_stock`, `slot_slide`. Position/rotate the empty where the part's mount point should sit. In Blender, an Empty with that name exports as a glTF node. Slots with no node in the GLB fall back to the `anchor` in `data.js`.
 
 If a weapon GLB comes in at the wrong size or direction, fix it in `data.js` without re-exporting: `scale` (e.g. `0.01` for centimetre models), `rot: [x,y,z]` degrees (e.g. `[0, -90, 0]` to turn a +Z-facing model to +X), `offset: [x,y,z]` metres (move the origin to the middle of the receiver) and `hide: ["Cube"]` (node names to hide, e.g. a leftover default cube). `slot_*` empties are read in the corrected space and keep real-world part scale.
+
+**Barrel parts** (`models/parts/barrel/`): model them with the origin at the receiver end of the barrel, pointing toward +X. The muzzle slot has `follows: { slot: "barrel", offset: -0.01 }`, so the muzzle device automatically sits on the far end of whichever barrel is installed (and at its default spot when there is no barrel). The placeholder barrels use `size: [length, thickness]` in `data.js`.
 
 **Part GLB** → `models/parts/<slot type>/<file>.glb`, then set `model: "<file>.glb"` on the part (folder is added from the part's `type`).
 Model each part with its **mount point at the origin (0,0,0)** and the same axes as the weapon; it is dropped onto the slot anchor. Optional per-part tweaks: `scale`, `rot: [x,y,z]` (degrees), `offset: [x,y,z]` (metres).

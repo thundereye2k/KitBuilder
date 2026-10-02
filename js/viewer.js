@@ -12,7 +12,7 @@ const OUTLINE_PX = 2.5; // thickness of the selection outline, in screen pixels
 
 /* Which way a placeholder grows from its mount point (anchor origin). */
 const GROW = {
-  muzzle: [1, 0, 0], handguard: [1, 0, 0], slide: [1, 0, 0],
+  barrel: [1, 0, 0], muzzle: [1, 0, 0], handguard: [1, 0, 0], slide: [1, 0, 0],
   stock: [-1, 0, 0],
   grip: [0, -1, 0], magazine: [0, -1, 0], underbarrel: [0, -1, 0],
   optic: [0, 1, 0], flashlight: [0, 1, 0], laser: [0, 1, 0]
@@ -167,7 +167,7 @@ export class Viewer {
       if (weapon.offset) wrap.position.fromArray(weapon.offset);
       (weapon.hide || []).forEach((name) => { const n = gltfRoot.getObjectByName(name); if (n) n.visible = false; });
       body.add(wrap);
-    } else body.add(this.placeholderBody(weapon.category));
+    } else body.add(this.placeholderBody(weapon.category, weapon.slots.some((s) => s.type === "barrel")));
     body.updateMatrixWorld(true);
 
     weapon.slots.forEach((def) => {
@@ -232,8 +232,23 @@ export class Viewer {
       s.partObj = obj;
       this.addOutline(s);
     }
+    this.applyFollowers();
     this.fitMarker(s);
     this.refreshMarkers();
+  }
+
+  /**
+   * Slots with `follows` (the muzzle) move along X to the far end of another slot's part (the barrel),
+   * or sit at their default position when that slot is empty.
+   */
+  applyFollowers() {
+    this.body.updateMatrixWorld(true);
+    for (const id in this.slots) {
+      const s = this.slots[id], f = s.def.follows;
+      if (!f) continue;
+      const src = this.slots[f.slot];
+      s.anchor.position.x = src && src.partObj ? new THREE.Box3().setFromObject(src.partObj).max.x + (f.offset || 0) : s.baseX;
+    }
   }
 
 
@@ -395,7 +410,7 @@ export class Viewer {
     return new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.35, ...extra });
   }
 
-  placeholderBody(cat) {
+  placeholderBody(cat, skipBarrel) {
     const g = new THREE.Group();
     const spec = BODY[cat] || RIFLE_BODY;
     const m = this.mat("#2f3640");
@@ -403,7 +418,7 @@ export class Viewer {
     const recv = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
     recv.position.set(x, y, 0);
     g.add(recv);
-    if (spec.barrel) {
+    if (spec.barrel && !skipBarrel) {   // weapons with a barrel slot get their barrel from the installed part
       const [len, rad, bx, by] = spec.barrel;
       const b = new THREE.Mesh(new THREE.CylinderGeometry(rad, rad, len, 20), m);
       b.rotation.z = Math.PI / 2;
@@ -427,6 +442,7 @@ export class Viewer {
     };
     switch (type) {
       case "muzzle": add(cylX(sx, Math.min(sy, sz) / 2)); break;
+      case "barrel": add(cylX(sx, sy / 2)); break;
       case "flashlight": case "laser": add(cylX(sx, Math.min(sx, sy) * 0.4)); break;
       case "optic": {
         add(cylX(sx, sy * 0.3), new THREE.Vector3(0, sy * 0.7, 0));
