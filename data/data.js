@@ -61,7 +61,7 @@ window.KITBUILDER_DATA = {
 
   weapons: [
     {
-      id: "carbine-556", name: "Carbine 5.56", category: "assault-rifles", caliber: "5.56x45",
+      id: "carbine-556", model: "carbine-556.glb", name: "Carbine 5.56", category: "assault-rifles", caliber: "5.56x45",
       base: { ergo: 45, recoil: 150, weight: 2.9, price: 900 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.288, 0.024, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, default: "flash-hider" },
@@ -76,7 +76,7 @@ window.KITBUILDER_DATA = {
       ]
     },
     {
-      id: "dmr-762", name: "Marksman 7.62", category: "dmrs", caliber: "7.62x51",
+      id: "dmr-762", model: "dmr-762.glb", name: "Marksman 7.62", category: "dmrs", caliber: "7.62x51",
       base: { ergo: 38, recoil: 260, weight: 4.3, price: 1800 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.304, 0.024, 0], rot: [0, 0, 0], size: [0.08, 0.032, 0.04] }, default: "flash-hider" },
@@ -91,7 +91,7 @@ window.KITBUILDER_DATA = {
       ]
     },
     {
-      id: "smg-9", name: "SMG 9mm", category: "smgs", caliber: "9x19",
+      id: "smg-9", model: "smg-9.glb", name: "SMG 9mm", category: "smgs", caliber: "9x19",
       base: { ergo: 55, recoil: 110, weight: 2.4, price: 700 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.24, 0.016, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, default: "flash-hider" },
@@ -106,7 +106,7 @@ window.KITBUILDER_DATA = {
       ]
     },
     {
-      id: "sniper-308", name: "Bolt Sniper .308", category: "sniper-rifles", caliber: "7.62x51",
+      id: "sniper-308", model: "sniper-308.glb", name: "Bolt Sniper .308", category: "sniper-rifles", caliber: "7.62x51",
       base: { ergo: 30, recoil: 220, weight: 5.2, price: 2600 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.288, 0.024, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, default: "compensator" },
@@ -121,7 +121,7 @@ window.KITBUILDER_DATA = {
       ]
     },
     {
-      id: "pistol-9", name: "Service Pistol 9mm", category: "pistols", caliber: "9x19",
+      id: "pistol-9", model: "pistol-9.glb", name: "Service Pistol 9mm", category: "pistols", caliber: "9x19",
       base: { ergo: 60, recoil: 120, weight: 0.8, price: 450 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.224, 0.04, 0], rot: [0, 0, 0], size: [0.08, 0.032, 0.04] } },
@@ -134,7 +134,7 @@ window.KITBUILDER_DATA = {
       ]
     },
     {
-      id: "lmg-556", name: "LMG 5.56", category: "lmgs", caliber: "5.56x45",
+      id: "lmg-556", model: "lmg-556.glb", name: "LMG 5.56", category: "lmgs", caliber: "5.56x45",
       base: { ergo: 25, recoil: 180, weight: 7.1, price: 3200 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.288, 0.024, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, default: "flash-hider" },
@@ -149,7 +149,7 @@ window.KITBUILDER_DATA = {
       ]
     },
     {
-      id: "shotgun-12", name: "Pump Shotgun 12ga", category: "shotguns", caliber: "12 gauge",
+      id: "shotgun-12", model: "shotgun-12.glb", name: "Pump Shotgun 12ga", category: "shotguns", caliber: "12 gauge",
       base: { ergo: 50, recoil: 300, weight: 3.4, price: 600 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.288, 0.024, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, default: "flash-hider" },
@@ -167,57 +167,57 @@ window.KITBUILDER_DATA = {
 
   parts: [
     /* ---- Muzzle ---- */
-    { id: "flash-hider", name: "Flash Hider", type: "muzzle", fits: "*", ergo: -1, recoil: -4, weight: 0.10, price: 60, color: "#4b5563" },
-    { id: "compensator", name: "Compensator", type: "muzzle", fits: "*", ergo: -2, recoil: -18, weight: 0.18, price: 140, color: "#374151" },
-    { id: "suppressor",  name: "Suppressor",  type: "muzzle", fits: "*", ergo: -6, recoil: -12, weight: 0.55, price: 650, color: "#1f2937", size: [0.136, 0.048] },
+    { id: "flash-hider", model: "flash-hider.glb", name: "Flash Hider", type: "muzzle", fits: "*", ergo: -1, recoil: -4, weight: 0.10, price: 60, color: "#4b5563" },
+    { id: "compensator", model: "compensator.glb", name: "Compensator", type: "muzzle", fits: "*", ergo: -2, recoil: -18, weight: 0.18, price: 140, color: "#374151" },
+    { id: "suppressor", model: "suppressor.glb",  name: "Suppressor",  type: "muzzle", fits: "*", ergo: -6, recoil: -12, weight: 0.55, price: 650, color: "#1f2937", size: [0.136, 0.048] },
 
     /* ---- Handguard ---- */
-    { id: "hg-polymer", name: "Polymer Handguard", type: "handguard", fits: LONG, ergo: 0, recoil: 0, weight: 0.30, price: 50, color: "#3f3f46" },
-    { id: "hg-mlok",    name: "M-LOK Handguard",   type: "handguard", fits: LONG, ergo: 4, recoil: -3, weight: 0.42, price: 220, color: "#52525b" },
-    { id: "hg-short",   name: "Short Rail",        type: "handguard", fits: LONG, ergo: 6, recoil: 4, weight: 0.22, price: 160, color: "#52525b", size: [0.16, 0.0448] },
+    { id: "hg-polymer", model: "hg-polymer.glb", name: "Polymer Handguard", type: "handguard", fits: LONG, ergo: 0, recoil: 0, weight: 0.30, price: 50, color: "#3f3f46" },
+    { id: "hg-mlok", model: "hg-mlok.glb",    name: "M-LOK Handguard",   type: "handguard", fits: LONG, ergo: 4, recoil: -3, weight: 0.42, price: 220, color: "#52525b" },
+    { id: "hg-short", model: "hg-short.glb",   name: "Short Rail",        type: "handguard", fits: LONG, ergo: 6, recoil: 4, weight: 0.22, price: 160, color: "#52525b", size: [0.16, 0.0448] },
 
     /* ---- Optics ---- */
-    { id: "red-dot",  name: "Red Dot Sight",  type: "optic", fits: "*", ergo: -1, recoil: 0, weight: 0.15, price: 280, color: "#b45309" },
-    { id: "holo",     name: "Holographic",    type: "optic", fits: "*", ergo: -2, recoil: 0, weight: 0.32, price: 520, color: "#92400e" },
-    { id: "lpvo",     name: "1-6x LPVO",      type: "optic", fits: RIFLES, ergo: -6, recoil: 0, weight: 0.65, price: 1100, color: "#292524" },
-    { id: "scope-12", name: "3-12x Scope",    type: "optic", fits: ["dmr-762", "sniper-rifles"], ergo: -9, recoil: 0, weight: 0.85, price: 1500, color: "#1c1917" },
+    { id: "red-dot", model: "red-dot.glb",  name: "Red Dot Sight",  type: "optic", fits: "*", ergo: -1, recoil: 0, weight: 0.15, price: 280, color: "#b45309" },
+    { id: "holo", model: "holo.glb",     name: "Holographic",    type: "optic", fits: "*", ergo: -2, recoil: 0, weight: 0.32, price: 520, color: "#92400e" },
+    { id: "lpvo", model: "lpvo.glb",     name: "1-6x LPVO",      type: "optic", fits: RIFLES, ergo: -6, recoil: 0, weight: 0.65, price: 1100, color: "#292524" },
+    { id: "scope-12", model: "scope-12.glb", name: "3-12x Scope",    type: "optic", fits: ["dmr-762", "sniper-rifles"], ergo: -9, recoil: 0, weight: 0.85, price: 1500, color: "#1c1917" },
 
     /* ---- Stocks ---- */
-    { id: "stock-fixed",       name: "Fixed Stock",       type: "stock", fits: LONG, ergo: 0, recoil: 0, weight: 0.35, price: 60, color: "#3f3f46" },
-    { id: "stock-collapsible", name: "Collapsible Stock", type: "stock", fits: LONG, ergo: 3, recoil: 6, weight: 0.28, price: 110, color: "#52525b" },
-    { id: "stock-skeleton",    name: "Skeleton Stock",    type: "stock", fits: LONG, ergo: 6, recoil: 12, weight: 0.20, price: 190, color: "#6b7280" },
-    { id: "stock-none",        name: "Brace Delete",      type: "stock", fits: ["smgs"], ergo: 8, recoil: 40, weight: 0.0, price: 0, color: "#000000", size: [0.016, 0.032] },
+    { id: "stock-fixed", model: "stock-fixed.glb",       name: "Fixed Stock",       type: "stock", fits: LONG, ergo: 0, recoil: 0, weight: 0.35, price: 60, color: "#3f3f46" },
+    { id: "stock-collapsible", model: "stock-collapsible.glb", name: "Collapsible Stock", type: "stock", fits: LONG, ergo: 3, recoil: 6, weight: 0.28, price: 110, color: "#52525b" },
+    { id: "stock-skeleton", model: "stock-skeleton.glb",    name: "Skeleton Stock",    type: "stock", fits: LONG, ergo: 6, recoil: 12, weight: 0.20, price: 190, color: "#6b7280" },
+    { id: "stock-none", model: "stock-none.glb",        name: "Brace Delete",      type: "stock", fits: ["smgs"], ergo: 8, recoil: 40, weight: 0.0, price: 0, color: "#000000", size: [0.016, 0.032] },
 
     /* ---- Grips ---- */
-    { id: "grip-a2",     name: "Standard Grip", type: "grip", fits: LONG, ergo: 0, recoil: 0, weight: 0.10, price: 20, color: "#3f3f46" },
-    { id: "grip-ergo",   name: "Ergo Grip",     type: "grip", fits: LONG, ergo: 4, recoil: -2, weight: 0.12, price: 45, color: "#52525b" },
-    { id: "grip-pistol", name: "Standard Frame", type: "grip", fits: ["pistols"], ergo: 0, recoil: 0, weight: 0.0, price: 0, color: "#3f3f46" },
-    { id: "grip-stipple",name: "Stippled Frame", type: "grip", fits: ["pistols"], ergo: 5, recoil: -4, weight: 0.0, price: 90, color: "#52525b" },
+    { id: "grip-a2", model: "grip-a2.glb",     name: "Standard Grip", type: "grip", fits: LONG, ergo: 0, recoil: 0, weight: 0.10, price: 20, color: "#3f3f46" },
+    { id: "grip-ergo", model: "grip-ergo.glb",   name: "Ergo Grip",     type: "grip", fits: LONG, ergo: 4, recoil: -2, weight: 0.12, price: 45, color: "#52525b" },
+    { id: "grip-pistol", model: "grip-pistol.glb", name: "Standard Frame", type: "grip", fits: ["pistols"], ergo: 0, recoil: 0, weight: 0.0, price: 0, color: "#3f3f46" },
+    { id: "grip-stipple", model: "grip-stipple.glb", name: "Stippled Frame", type: "grip", fits: ["pistols"], ergo: 5, recoil: -4, weight: 0.0, price: 90, color: "#52525b" },
 
     /* ---- Magazines ---- */
-    { id: "mag-30",     name: "30rnd STANAG",    type: "magazine", fits: ["carbine-556"], ergo: 0, recoil: 0, weight: 0.45, price: 25, color: "#3f3f46" },
-    { id: "mag-20",     name: "20rnd Short",     type: "magazine", fits: ["carbine-556"], ergo: 3, recoil: 0, weight: 0.32, price: 22, color: "#52525b", size: [0.064, 0.08] },
-    { id: "mag-40",     name: "40rnd Extended",  type: "magazine", fits: ["carbine-556"], ergo: -5, recoil: 0, weight: 0.62, price: 70, color: "#27272a", size: [0.064, 0.14] },
-    { id: "mag-20-762", name: "20rnd 7.62",      type: "magazine", fits: ["dmr-762", "sniper-rifles"], ergo: 0, recoil: 0, weight: 0.65, price: 35, color: "#3f3f46" },
-    { id: "mag-10-308", name: "10rnd .308",         type: "magazine", fits: ["sniper-308"], ergo: 0, recoil: 0, weight: 0.45, price: 40, color: "#3f3f46" },
-    { id: "belt-100",   name: "100rnd Belt Box",    type: "magazine", fits: ["lmg-556"], ergo: -4, recoil: 0, weight: 1.9, price: 120, color: "#3f3f46" },
-    { id: "tube-6",     name: "6rnd Tube",          type: "magazine", fits: ["shotgun-12"], ergo: 0, recoil: 0, weight: 0.3, price: 20, color: "#3f3f46" },
-    { id: "tube-8",     name: "8rnd Extended Tube", type: "magazine", fits: ["shotgun-12"], ergo: -2, recoil: 0, weight: 0.45, price: 60, color: "#27272a" },
-    { id: "mag-30-9",   name: "30rnd 9mm",       type: "magazine", fits: ["smg-9"], ergo: 0, recoil: 0, weight: 0.45, price: 25, color: "#3f3f46" },
-    { id: "mag-15-9",   name: "15rnd 9mm",       type: "magazine", fits: ["pistol-9"], ergo: 0, recoil: 0, weight: 0.25, price: 25, color: "#3f3f46" },
-    { id: "mag-21-9",   name: "21rnd Extended",  type: "magazine", fits: ["pistol-9"], ergo: -3, recoil: 0, weight: 0.32, price: 45, color: "#27272a", size: [0.08, 0.136] },
+    { id: "mag-30", model: "mag-30.glb",     name: "30rnd STANAG",    type: "magazine", fits: ["carbine-556"], ergo: 0, recoil: 0, weight: 0.45, price: 25, color: "#3f3f46" },
+    { id: "mag-20", model: "mag-20.glb",     name: "20rnd Short",     type: "magazine", fits: ["carbine-556"], ergo: 3, recoil: 0, weight: 0.32, price: 22, color: "#52525b", size: [0.064, 0.08] },
+    { id: "mag-40", model: "mag-40.glb",     name: "40rnd Extended",  type: "magazine", fits: ["carbine-556"], ergo: -5, recoil: 0, weight: 0.62, price: 70, color: "#27272a", size: [0.064, 0.14] },
+    { id: "mag-20-762", model: "mag-20-762.glb", name: "20rnd 7.62",      type: "magazine", fits: ["dmr-762", "sniper-rifles"], ergo: 0, recoil: 0, weight: 0.65, price: 35, color: "#3f3f46" },
+    { id: "mag-10-308", model: "mag-10-308.glb", name: "10rnd .308",         type: "magazine", fits: ["sniper-308"], ergo: 0, recoil: 0, weight: 0.45, price: 40, color: "#3f3f46" },
+    { id: "belt-100", model: "belt-100.glb",   name: "100rnd Belt Box",    type: "magazine", fits: ["lmg-556"], ergo: -4, recoil: 0, weight: 1.9, price: 120, color: "#3f3f46" },
+    { id: "tube-6", model: "tube-6.glb",     name: "6rnd Tube",          type: "magazine", fits: ["shotgun-12"], ergo: 0, recoil: 0, weight: 0.3, price: 20, color: "#3f3f46" },
+    { id: "tube-8", model: "tube-8.glb",     name: "8rnd Extended Tube", type: "magazine", fits: ["shotgun-12"], ergo: -2, recoil: 0, weight: 0.45, price: 60, color: "#27272a" },
+    { id: "mag-30-9", model: "mag-30-9.glb",   name: "30rnd 9mm",       type: "magazine", fits: ["smg-9"], ergo: 0, recoil: 0, weight: 0.45, price: 25, color: "#3f3f46" },
+    { id: "mag-15-9", model: "mag-15-9.glb",   name: "15rnd 9mm",       type: "magazine", fits: ["pistol-9"], ergo: 0, recoil: 0, weight: 0.25, price: 25, color: "#3f3f46" },
+    { id: "mag-21-9", model: "mag-21-9.glb",   name: "21rnd Extended",  type: "magazine", fits: ["pistol-9"], ergo: -3, recoil: 0, weight: 0.32, price: 45, color: "#27272a", size: [0.08, 0.136] },
 
     /* ---- Flashlight / Laser ---- */
-    { id: "flashlight", name: "Weapon Light", type: "flashlight", fits: "*", ergo: -1, recoil: 0, weight: 0.12, price: 160, color: "#ca8a04" },
-    { id: "laser",      name: "Red Laser",    type: "laser", fits: "*", ergo: -1, recoil: 0, weight: 0.08, price: 190, color: "#b91c1c" },
+    { id: "flashlight", model: "flashlight.glb", name: "Weapon Light", type: "flashlight", fits: "*", ergo: -1, recoil: 0, weight: 0.12, price: 160, color: "#ca8a04" },
+    { id: "laser", model: "laser.glb",      name: "Red Laser",    type: "laser", fits: "*", ergo: -1, recoil: 0, weight: 0.08, price: 190, color: "#b91c1c" },
 
     /* ---- Underbarrel ---- */
-    { id: "vfg",    name: "Vertical Foregrip", type: "underbarrel", fits: LONG, ergo: 5, recoil: -10, weight: 0.12, price: 40, color: "#3f3f46" },
-    { id: "angled", name: "Angled Foregrip",   type: "underbarrel", fits: LONG, ergo: 4, recoil: -7,  weight: 0.10, price: 55, color: "#52525b" },
-    { id: "bipod",  name: "Bipod",             type: "underbarrel", fits: RIFLES, ergo: -4, recoil: -22, weight: 0.45, price: 210, color: "#292524" },
+    { id: "vfg", model: "vfg.glb",    name: "Vertical Foregrip", type: "underbarrel", fits: LONG, ergo: 5, recoil: -10, weight: 0.12, price: 40, color: "#3f3f46" },
+    { id: "angled", model: "angled.glb", name: "Angled Foregrip",   type: "underbarrel", fits: LONG, ergo: 4, recoil: -7,  weight: 0.10, price: 55, color: "#52525b" },
+    { id: "bipod", model: "bipod.glb",  name: "Bipod",             type: "underbarrel", fits: RIFLES, ergo: -4, recoil: -22, weight: 0.45, price: 210, color: "#292524" },
 
     /* ---- Pistol slide ---- */
-    { id: "slide-std",   name: "Standard Slide",   type: "slide", fits: ["pistols"], ergo: 0, recoil: 0, weight: 0.0, price: 0, color: "#3f3f46" },
-    { id: "slide-ported",name: "Ported Slide",     type: "slide", fits: ["pistols"], ergo: 0, recoil: -8, weight: 0.0, price: 180, color: "#52525b" }
+    { id: "slide-std", model: "slide-std.glb",   name: "Standard Slide",   type: "slide", fits: ["pistols"], ergo: 0, recoil: 0, weight: 0.0, price: 0, color: "#3f3f46" },
+    { id: "slide-ported", model: "slide-ported.glb", name: "Ported Slide",     type: "slide", fits: ["pistols"], ergo: 0, recoil: -8, weight: 0.0, price: 180, color: "#52525b" }
   ]
 };

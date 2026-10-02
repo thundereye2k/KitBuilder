@@ -43,6 +43,8 @@ Put an *empty node* in the GLB for every attachment point and name it `slot_<slo
 **Part GLB** → `models/parts/<slot type>/<file>.glb`, then set `model: "<file>.glb"` on the part (folder is added from the part's `type`).
 Model each part with its **mount point at the origin (0,0,0)** and the same axes as the weapon; it is dropped onto the slot anchor. Optional per-part tweaks: `scale`, `rot: [x,y,z]` (degrees), `offset: [x,y,z]` (metres).
 
+Every weapon and part already has `model: "<id>.glb"` filled in, so the quickest way to add a model is to save it under that exact name in the right folder (e.g. `models/parts/optic/red-dot.glb`). Rename the file or edit `model` if you prefer another name. A missing file is not an error: the placeholder is shown (the browser console logs a 404 for it).
+
 Anything without a model renders as a placeholder shape sized from the slot's `anchor.size`, so models can be added gradually. Optional `thumb: "path.png"` on a part sets its list thumbnail.
 
 Draco/meshopt-compressed GLBs are not wired up yet.
