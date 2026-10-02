@@ -4,9 +4,11 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
 const DEG = Math.PI / 180;
 const ACCENT = 0xe8a33d;
+const OUTLINE_PX = 2.5; // thickness of the selection outline, in screen pixels
 
 /* Which way a placeholder grows from its mount point (anchor origin). */
 const GROW = {
@@ -57,6 +59,18 @@ function isFlat(geometry) {
   return s[2] > 0 && s[0] / s[2] < 0.03;
 }
 
+const outlineGeoCache = new WeakMap();
+function outlineGeometry(src) {
+  if (outlineGeoCache.has(src)) return outlineGeoCache.get(src);
+  let g = new THREE.BufferGeometry();
+  g.setAttribute("position", src.attributes.position);
+  if (src.index) g.setIndex(src.index);
+  g = mergeVertices(g, 1e-3);   // weld vertices that were split for hard edges / UVs
+  g.computeVertexNormals();     // then smooth normals: the inflated copy stays closed
+  outlineGeoCache.set(src, g);
+  return g;
+}
+
 function fixBlendMaterials(root) {
   root.traverse((o) => {
     if (!o.isMesh) return;
@@ -86,8 +100,9 @@ export class Viewer {
     this.hovered = null;
     this.onSlotClick = () => {};
     this.token = 0;
+    this.outlineRes = new THREE.Vector2(1, 1); // CSS pixel size of the view, shared by all outline materials
 
-    const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }));
+    const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, stencil: true }));
     r.setPixelRatio(Math.min(devicePixelRatio, matchMedia("(hover: none)").matches ? 1.75 : 2));
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.ACESFilmicToneMapping;
@@ -215,9 +230,64 @@ export class Viewer {
       obj.traverse((o) => { if (o.isMesh) o.userData.slotId = slotId; });
       s.anchor.add(obj);
       s.partObj = obj;
+      this.addOutline(s);
     }
     this.fitMarker(s);
     this.refreshMarkers();
+  }
+
+
+  /**
+   * Selection outline that follows the part's real shape: every mesh gets a copy drawn "inside out" and
+   * pushed outwards by a few screen pixels. It only shows where it sticks out past the part itself.
+   */
+  addOutline(s) {
+    if (!s.outlineMat) {
+      s.outlineMat = new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: new THREE.Color(ACCENT) }, uOpacity: { value: 0 }, uPx: { value: OUTLINE_PX }, uRes: { value: this.outlineRes } },
+        vertexShader: `
+          uniform vec2 uRes; uniform float uPx;
+          void main() {
+            vec4 clip = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            vec3 n = normalize(normalMatrix * normal);
+            vec2 dir = (projectionMatrix * vec4(n, 0.0)).xy;
+            dir = length(dir) > 1e-5 ? normalize(dir) : vec2(0.0);
+            clip.xy += dir * uPx * 2.0 / uRes * clip.w;
+            gl_Position = clip;
+          }`,
+        fragmentShader: `uniform vec3 uColor; uniform float uOpacity; void main() { gl_FragColor = vec4(uColor, uOpacity); }`,
+        side: THREE.BackSide, transparent: true, depthWrite: false,
+        // only draw where the part itself did not (see mask meshes below): a clean outer silhouette, no inner lines
+        stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc,
+        stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp
+      });
+      s.maskMat = new THREE.MeshBasicMaterial({
+        colorWrite: false, depthWrite: false,
+        stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc,
+        stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.ReplaceStencilOp
+      });
+    }
+    const meshes = [];
+    s.partObj.traverse((o) => { if (o.isMesh && o.visible && !o.material.transparent) meshes.push(o); });
+    for (const m of meshes) {
+      const ol = new THREE.Mesh(outlineGeometry(m.geometry), s.outlineMat);
+      ol.raycast = () => {};
+      ol.renderOrder = 2;
+      ol.visible = false;
+      ol.userData.isOutline = true;
+      m.add(ol);
+      const mask = new THREE.Mesh(m.geometry, s.maskMat);   // marks the part's own pixels in the stencil buffer
+      mask.raycast = () => {};
+      mask.renderOrder = 1;
+      mask.visible = false;
+      mask.userData.isOutline = true;
+      m.add(mask);
+    }
+  }
+
+  setOutline(s, on) {
+    s.outlineMat.uniforms.uOpacity.value = on ? 1 : 0;
+    s.partObj.traverse((o) => { if (o.userData.isOutline) o.visible = on; });
   }
 
   /** Bounding box of an object in the local space of `anchor` (not axis-aligned in the world if the anchor is rotated). */
@@ -248,6 +318,8 @@ export class Viewer {
     const edges = m.userData.edges;
     edges.geometry.dispose();
     edges.geometry = new THREE.EdgesGeometry(m.geometry);
+    // with a part installed the outline follows the part itself, so the box is no longer clickable
+    m.raycast = s.partObj ? () => {} : THREE.Mesh.prototype.raycast;
   }
 
 
@@ -389,10 +461,12 @@ export class Viewer {
     for (const id in this.slots) {
       const s = this.slots[id];
       const active = id === this.activeSlot, hover = id === this.hovered, empty = !s.part;
-      const fill = active ? 0.12 : hover ? 0.18 : 0;
-      const line = active || hover ? 1 : empty ? 0.45 : 0;
+      const filled = !!s.partObj;
+      const fill = filled ? 0 : active ? 0.12 : hover ? 0.18 : 0;
+      const line = filled ? 0 : active || hover ? 1 : 0.45;
       s.marker.material.opacity = fill;
       s.marker.userData.edges.material.opacity = line;
+      if (filled && s.outlineMat) this.setOutline(s, active || hover);
       s.label.classList.toggle("on", active);
     }
   }
@@ -411,6 +485,7 @@ export class Viewer {
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (!w || !h) return;
     this.renderer.setSize(w, h, false);
+    this.outlineRes.set(w, h);
     const aspect = w / h;
     // layout changed a lot (rotation, breakpoint): reframe so the weapon is not cropped
     const reframe = this.lastAspect && Math.abs(aspect - this.lastAspect) / this.lastAspect > 0.15 && this.root.children.length;
