@@ -200,7 +200,7 @@ window.KITBUILDER_DATA = {
     { id: "grip-stipple", model: "grip-stipple.glb", name: "Stippled Frame", type: "grip", fits: ["pistols"], ergo: 5, recoil: -4, weight: 0.0, price: 90, color: "#52525b" },
 
     /* ---- Magazines ---- */
-    { id: "pmag-30", model: "AR_15_pmag_30.glb",     name: "30rnd PMAG",    type: "magazine", fits: ["carbine-556"], ergo: 0, recoil: 0, weight: 0.45, price: 25, color: "#3f3f46" },
+    { id: "pmag-30", model: "AR_15_pmag_30.glb", scale: 0.01, rot: [0, 90, 180], offset: [-0.037, 0.0116, 0],     name: "30rnd PMAG",    type: "magazine", fits: ["carbine-556"], ergo: 0, recoil: 0, weight: 0.45, price: 25, color: "#3f3f46" },
     { id: "mag-20", model: "mag-20.glb",     name: "20rnd Short",     type: "magazine", fits: ["carbine-556"], ergo: 3, recoil: 0, weight: 0.32, price: 22, color: "#52525b", size: [0.064, 0.08] },
     { id: "mag-40", model: "mag-40.glb",     name: "40rnd Extended",  type: "magazine", fits: ["carbine-556"], ergo: -5, recoil: 0, weight: 0.62, price: 70, color: "#27272a", size: [0.064, 0.14] },
     { id: "mag-20-762", model: "mag-20-762.glb", name: "20rnd 7.62",      type: "magazine", fits: ["dmr-762", "sniper-rifles"], ergo: 0, recoil: 0, weight: 0.65, price: 35, color: "#3f3f46" },
