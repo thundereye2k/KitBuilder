@@ -195,7 +195,7 @@ window.KITBUILDER_DATA = {
 
     /* ---- Grips ---- */
     { id: "grip-a2", model: "grip-a2.glb",     name: "Standard Grip", type: "grip", fits: LONG, ergo: 0, recoil: 0, weight: 0.10, price: 20, color: "#3f3f46" },
-    { id: "grip-ergo", model: "grip-ergo.glb",   name: "Ergo Grip",     type: "grip", fits: LONG, ergo: 4, recoil: -2, weight: 0.12, price: 45, color: "#52525b" },
+    { id: "grip-ergo", model: "AR_15_Grip.glb",   name: "Ergo Grip",     type: "grip", fits: LONG, ergo: 4, recoil: -2, weight: 0.12, price: 45, color: "#52525b" },
     { id: "grip-pistol", model: "grip-pistol.glb", name: "Standard Frame", type: "grip", fits: ["pistols"], ergo: 0, recoil: 0, weight: 0.0, price: 0, color: "#3f3f46" },
     { id: "grip-stipple", model: "grip-stipple.glb", name: "Stippled Frame", type: "grip", fits: ["pistols"], ergo: 5, recoil: -4, weight: 0.0, price: 90, color: "#52525b" },
 
