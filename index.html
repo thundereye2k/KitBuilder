@@ -30,9 +30,10 @@
           <h1 id="weapon-name">—</h1>
           <p id="weapon-meta" class="muted"></p>
         </div>
-        <button id="btn-labels" class="btn ghost" aria-pressed="false">Slot labels</button>
+        <div class="actions"><button id="btn-view" class="btn ghost">Reset view</button><button id="btn-labels" class="btn ghost" aria-pressed="false">Slot labels</button></div>
       </div>
-      <div class="stage"><svg id="board" viewBox="0 0 1000 400" role="img" aria-label="Weapon preview"></svg></div>
+      <div class="stage"><div id="viewport" class="viewport"></div><div id="labels" class="labels"></div>
+        <div class="hint">Drag to rotate · scroll to zoom · click a part or slot</div></div>
 
       <div id="stats" class="stats"></div>
       <div id="build-list" class="build-list"></div>
@@ -46,7 +47,10 @@
   </main>
 
   <div id="toast" class="toast" role="status"></div>
+  <script type="importmap">
+  { "imports": { "three": "./js/vendor/three.module.min.js", "three/addons/": "./js/vendor/addons/" } }
+  </script>
   <script src="data/data.js"></script>
-  <script src="js/app.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

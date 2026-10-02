@@ -4,27 +4,30 @@ A static, dependency-free weapon kit configurator. Pick a weapon, click a slot (
 
 ## Run / host
 
-No build step. Serve the folder with anything:
+No build step, no npm. three.js is vendored in `js/vendor/`. Because it uses ES modules, serve over HTTP (opening `index.html` via `file://` won't work):
 
 ```
 python3 -m http.server 8080
 ```
 
-or drop it on GitHub Pages / Netlify / Cloudflare Pages / any web host. (`index.html` also works opened directly.)
+Or deploy the folder as-is to GitHub Pages / Netlify / Cloudflare Pages / any static host.
 
 ## Adding content — `data/data.js`
 
-- **Weapons**: add to `weapons[]` with its `slots` (each slot has a `type` and a `box` on the 1000×400 board).
-- **Parts**: add to `parts[]`. `type` must match a slot type; `fits` is `"*"`, or a list of weapon ids / category ids. `ergo`, `recoil`, `weight`, `price` are deltas.
+- **Weapons**: add to `weapons[]` with `slots` (each slot has a `type` and an `anchor`).
+- **Parts**: add to `parts[]`. `type` must match a slot type; `fits` is `"*"` or a list of weapon ids / category ids. `ergo`, `recoil`, `weight`, `price` are deltas.
 - **Categories / slot types**: `categories[]`, `slotTypes{}`.
 
-## Supplying models
+## Supplying 3D models (GLB)
 
-Currently models are 2D side-view images layered on the board (transparent PNG/WebP/SVG):
+Conventions: metres, Y up, barrel pointing **+X**, weapon's right side **+Z**.
 
-- Weapon base image: set `image: "models/weapons/<file>.png"` on the weapon (drawn full board).
-- Part image: set `image: "models/parts/<file>.png"` on the part; it is fitted inside the slot `box` (or the part's own `box` override). Align each part image's mount point to its slot box, and tweak `box` to taste.
+**Weapon GLB** → `models/weapons/<file>.glb`, then set `model: "models/weapons/<file>.glb"` on the weapon.
+Put an *empty node* in the GLB for every attachment point and name it `slot_<slotId>` (e.g. `slot_optic`, `slot_muzzle`, `slot_magazine`). Position/rotate the empty where the part's mount point should sit. In Blender, an Empty with that name exports as a glTF node. Slots with no node in the GLB fall back to the `anchor` in `data.js`.
 
-Parts without an image render as labelled placeholder shapes.
+**Part GLB** → `models/parts/<file>.glb`, then set `model: "models/parts/<file>.glb"` on the part.
+Model each part with its **mount point at the origin (0,0,0)** and the same axes as the weapon; it is dropped onto the slot anchor. Optional per-part tweaks: `scale`, `rot: [x,y,z]` (degrees), `offset: [x,y,z]` (metres).
 
-Real 3D (GLB) is a natural next step: swap the SVG board for `<model-viewer>` / three.js and attach part models at slot anchor nodes.
+Anything without a model renders as a placeholder shape sized from the slot's `anchor.size`, so models can be added gradually. Optional `thumb: "path.png"` on a part sets its list thumbnail.
+
+Draco/meshopt-compressed GLBs are not wired up yet.
