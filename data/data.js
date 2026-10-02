@@ -183,7 +183,7 @@ window.KITBUILDER_DATA = {
 
     /* ---- Optics ---- */
     { id: "red-dot", model: "red-dot.glb",  name: "Red Dot Sight",  type: "optic", fits: "*", ergo: -1, recoil: 0, weight: 0.15, price: 280, color: "#b45309" },
-    { id: "holo", model: "eotech_hws_exps_3.glb", scale: 0.01, offset: [0, 0.0368, 0],     name: "Eotech EXPS 3",    type: "optic", fits: "*", ergo: -2, recoil: 0, weight: 0.32, price: 520, color: "#92400e" },
+    { id: "holo", model: "eotech_hws_exps_3.glb", scale: 0.01, offset: [0, 0.0168, 0],     name: "Eotech EXPS 3",    type: "optic", fits: "*", ergo: -2, recoil: 0, weight: 0.32, price: 520, color: "#92400e" },
     { id: "lpvo", model: "lpvo.glb",     name: "1-6x LPVO",      type: "optic", fits: RIFLES, ergo: -6, recoil: 0, weight: 0.65, price: 1100, color: "#292524" },
     { id: "scope-12", model: "scope-12.glb", name: "3-12x Scope",    type: "optic", fits: ["dmr-762", "sniper-rifles"], ergo: -9, recoil: 0, weight: 0.85, price: 1500, color: "#1c1917" },
 
