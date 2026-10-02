@@ -189,7 +189,7 @@ window.KITBUILDER_DATA = {
 
     /* ---- Stocks ---- */
     { id: "stock-fixed", model: "stock-fixed.glb",       name: "Fixed Stock",       type: "stock", fits: LONG, ergo: 0, recoil: 0, weight: 0.35, price: 60, color: "#3f3f46" },
-    { id: "stock-collapsible", model: "stock-collapsible.glb", name: "Collapsible Stock", type: "stock", fits: LONG, ergo: 3, recoil: 6, weight: 0.28, price: 110, color: "#52525b" },
+    { id: "stock-collapsible", model: "AR_15_B5_stock.glb", name: "Collapsible Stock", type: "stock", fits: LONG, ergo: 3, recoil: 6, weight: 0.28, price: 110, color: "#52525b" },
     { id: "stock-skeleton", model: "stock-skeleton.glb",    name: "Skeleton Stock",    type: "stock", fits: LONG, ergo: 6, recoil: 12, weight: 0.20, price: 190, color: "#6b7280" },
     { id: "stock-none", model: "stock-none.glb",        name: "Brace Delete",      type: "stock", fits: ["smgs"], ergo: 8, recoil: 40, weight: 0.0, price: 0, color: "#000000", size: [0.016, 0.032] },
 
