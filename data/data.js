@@ -25,6 +25,8 @@
  *             installed attachment (its bounding box is used).
  *   a slot may carry  follows: { slot, offset }  -> its anchor X follows the far end of the part in `slot`
  *             (used by the muzzle, which sits on the end of the installed barrel; no barrel = default anchor).
+ *   a slot may carry  noBlock: true  -> its part never blocks sliding parts and a change in this slot is never refused
+ *             for "no room" (the barrel runs under the handguard / rail, so it is not an obstacle).
  *   slots[] -> { id, type, name, anchor: {pos:[x,y,z], rot:[deg,deg,deg], size:[x,y,z]}, default?: partId }
  *             `pos`/`rot` = fallback anchor; `size` = bounds used for the placeholder shape + click target.
  *
@@ -72,7 +74,7 @@ window.KITBUILDER_DATA = {
       id: "carbine-556", model: "AR_15_receiver.glb", scale: 0.01, rot: [0, -90, 0], offset: [0.132, 0, 0], hide: ["Cube"], name: "Carbine 5.56", category: "assault-rifles", caliber: "5.56x45",
       base: { ergo: 45, recoil: 150, weight: 2.9, price: 900 },
       slots: [
-        { id: "barrel",   type: "barrel",    name: "Barrel",      anchor: { pos: [0.1047, 0, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-ar-16" },
+        { id: "barrel",   type: "barrel",    name: "Barrel",      noBlock: true, anchor: { pos: [0.1047, 0, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-ar-16" },
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.34, 0, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, follows: { slot: "barrel", offset: -0.01 }, default: "flash-hider" },
         { id: "handguard",type: "handguard", name: "Handguard",   anchor: { pos: [0.1, 0.006, 0], rot: [0, 0, 0], size: [0.24, 0.048, 0.06] }, default: "hg-polymer" },
         { id: "optic",    type: "optic",     name: "Optic",       anchor: { pos: [0, 0.03, 0], rot: [0, 0, 0], size: [0.152, 0.064, 0.045] }, rail: { min: -0.097, max: 0.1, extend: "handguard" } },
@@ -88,7 +90,7 @@ window.KITBUILDER_DATA = {
       id: "dmr-762", model: "dmr-762.glb", name: "Marksman 7.62", category: "dmrs", caliber: "7.62x51",
       base: { ergo: 38, recoil: 260, weight: 4.3, price: 1800 },
       slots: [
-        { id: "barrel",   type: "barrel",    name: "Barrel",      anchor: { pos: [0.056, 0.024, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-dmr-20" },
+        { id: "barrel",   type: "barrel",    name: "Barrel",      noBlock: true, anchor: { pos: [0.056, 0.024, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-dmr-20" },
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.304, 0.024, 0], rot: [0, 0, 0], size: [0.08, 0.032, 0.04] }, follows: { slot: "barrel", offset: -0.01 }, default: "flash-hider" },
         { id: "handguard",type: "handguard", name: "Handguard",   anchor: { pos: [0.056, 0.016, 0], rot: [0, 0, 0], size: [0.248, 0.048, 0.06] }, default: "hg-polymer" },
         { id: "optic",    type: "optic",     name: "Optic",       anchor: { pos: [-0.012, 0.04, 0], rot: [0, 0, 0], size: [0.168, 0.0672, 0.045] }, rail: { min: -0.07, max: 0.056, extend: "handguard" } },
@@ -104,7 +106,7 @@ window.KITBUILDER_DATA = {
       id: "smg-9", model: "smg-9.glb", name: "SMG 9mm", category: "smgs", caliber: "9x19",
       base: { ergo: 55, recoil: 110, weight: 2.4, price: 700 },
       slots: [
-        { id: "barrel",   type: "barrel",    name: "Barrel",      anchor: { pos: [0.048, 0.016, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-smg-85" },
+        { id: "barrel",   type: "barrel",    name: "Barrel",      noBlock: true, anchor: { pos: [0.048, 0.016, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-smg-85" },
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.24, 0.016, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, follows: { slot: "barrel", offset: -0.01 }, default: "flash-hider" },
         { id: "handguard",type: "handguard", name: "Handguard",   anchor: { pos: [0.048, 0.008, 0], rot: [0, 0, 0], size: [0.192, 0.048, 0.06] }, default: "hg-polymer" },
         { id: "optic",    type: "optic",     name: "Optic",       anchor: { pos: [-0.008, 0.032, 0], rot: [0, 0, 0], size: [0.144, 0.064, 0.045] }, rail: { min: -0.05, max: 0.048, extend: "handguard" } },
@@ -120,7 +122,7 @@ window.KITBUILDER_DATA = {
       id: "sniper-308", model: "sniper-308.glb", name: "Bolt Sniper .308", category: "sniper-rifles", caliber: "7.62x51",
       base: { ergo: 30, recoil: 220, weight: 5.2, price: 2600 },
       slots: [
-        { id: "barrel",   type: "barrel",    name: "Barrel",      anchor: { pos: [0.048, 0.024, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-sniper-24" },
+        { id: "barrel",   type: "barrel",    name: "Barrel",      noBlock: true, anchor: { pos: [0.048, 0.024, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-sniper-24" },
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.288, 0.024, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, follows: { slot: "barrel", offset: -0.01 }, default: "compensator" },
         { id: "handguard",type: "handguard", name: "Handguard",   anchor: { pos: [0.048, 0.016, 0], rot: [0, 0, 0], size: [0.24, 0.048, 0.06] }, default: "hg-polymer" },
         { id: "optic",    type: "optic",     name: "Optic",       anchor: { pos: [-0.02, 0.04, 0], rot: [0, 0, 0], size: [0.152, 0.064, 0.045] }, rail: { min: -0.07, max: 0.048, extend: "handguard" }, default: "scope-12" },
@@ -149,7 +151,7 @@ window.KITBUILDER_DATA = {
       id: "lmg-556", model: "lmg-556.glb", name: "LMG 5.56", category: "lmgs", caliber: "5.56x45",
       base: { ergo: 25, recoil: 180, weight: 7.1, price: 3200 },
       slots: [
-        { id: "barrel",   type: "barrel",    name: "Barrel",      anchor: { pos: [0.048, 0.024, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-ar-20" },
+        { id: "barrel",   type: "barrel",    name: "Barrel",      noBlock: true, anchor: { pos: [0.048, 0.024, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-ar-20" },
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.288, 0.024, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, follows: { slot: "barrel", offset: -0.01 }, default: "flash-hider" },
         { id: "handguard",type: "handguard", name: "Handguard",   anchor: { pos: [0.048, 0.016, 0], rot: [0, 0, 0], size: [0.24, 0.048, 0.06] }, default: "hg-polymer" },
         { id: "optic",    type: "optic",     name: "Optic",       anchor: { pos: [-0.02, 0.04, 0], rot: [0, 0, 0], size: [0.152, 0.064, 0.045] }, rail: { min: -0.07, max: 0.048, extend: "handguard" } },
@@ -165,7 +167,7 @@ window.KITBUILDER_DATA = {
       id: "shotgun-12", model: "shotgun-12.glb", name: "Pump Shotgun 12ga", category: "shotguns", caliber: "12 gauge",
       base: { ergo: 50, recoil: 300, weight: 3.4, price: 600 },
       slots: [
-        { id: "barrel",   type: "barrel",    name: "Barrel",      anchor: { pos: [0.048, 0.024, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-sg-18" },
+        { id: "barrel",   type: "barrel",    name: "Barrel",      noBlock: true, anchor: { pos: [0.048, 0.024, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-sg-18" },
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.288, 0.024, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, follows: { slot: "barrel", offset: -0.01 }, default: "flash-hider" },
         { id: "handguard",type: "handguard", name: "Handguard",   anchor: { pos: [0.048, 0.016, 0], rot: [0, 0, 0], size: [0.24, 0.048, 0.06] }, default: "hg-polymer" },
         { id: "optic",    type: "optic",     name: "Optic",       anchor: { pos: [-0.02, 0.04, 0], rot: [0, 0, 0], size: [0.152, 0.064, 0.045] }, rail: { min: -0.07, max: 0.048, extend: "handguard" } },

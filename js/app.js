@@ -53,7 +53,8 @@ import { Viewer } from "./viewer.js";
     render();
     await viewer.setPart(slotId, partId ? partById(partId) : null);
     const r = reflow();
-    if (!r.ok) {
+    const noBlock = (weapon().slots.find((s) => s.id === slotId) || {}).noBlock;   // e.g. the barrel: never refused
+    if (!r.ok && !noBlock) {
       // no room on the rail: put the previous part back
       state.parts[slotId] = prev;
       state.shift = wasShift;

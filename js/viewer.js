@@ -370,7 +370,7 @@ export class Viewer {
     for (const id in this.slots) {
       if (id === slotId || id === rail.extend) continue;
       const o = this.slots[id];
-      if (!o.partObj) continue;
+      if (!o.partObj || o.def.noBlock) continue;   // noBlock slots (the barrel) never get in the way
       const B = box(o.partObj);
       const overlapYZ = A.min.y < B.max.y - EPS && A.max.y > B.min.y + EPS && A.min.z < B.max.z - EPS && A.max.z > B.min.z + EPS;
       if (overlapYZ) blocked.push([B.min.x - relMax - base, B.max.x - relMin - base, o.def.name]);
