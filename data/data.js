@@ -178,7 +178,7 @@ window.KITBUILDER_DATA = {
 
     /* ---- Handguard ---- */
     { id: "hg-polymer", model: "hg-polymer.glb", name: "Polymer Handguard", type: "handguard", fits: LONG, ergo: 0, recoil: 0, weight: 0.30, price: 50, color: "#3f3f46" },
-    { id: "hg-mlok", model: "hg-mlok.glb",    name: "M-LOK Handguard",   type: "handguard", fits: LONG, ergo: 4, recoil: -3, weight: 0.42, price: 220, color: "#52525b" },
+    { id: "hg-mlok", model: "AR_15_mlok_handguard.glb",    name: "M-LOK Handguard",   type: "handguard", fits: LONG, ergo: 4, recoil: -3, weight: 0.42, price: 220, color: "#52525b" },
     { id: "hg-short", model: "hg-short.glb",   name: "Short Rail",        type: "handguard", fits: LONG, ergo: 6, recoil: 4, weight: 0.22, price: 160, color: "#52525b", size: [0.16, 0.0448] },
 
     /* ---- Optics ---- */
