@@ -91,3 +91,5 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 [hidden]{display:none!important}
 .part .mods:empty{display:none}
+.empty{color:var(--muted);padding:8px 2px;font-size:13px}.empty small{display:block;font:11px var(--mono);margin-top:4px}
+.tabs{flex-wrap:wrap}

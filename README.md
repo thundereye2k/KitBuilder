@@ -18,14 +18,29 @@ Or deploy the folder as-is to GitHub Pages / Netlify / Cloudflare Pages / any st
 - **Parts**: add to `parts[]`. `type` must match a slot type; `fits` is `"*"` or a list of weapon ids / category ids. `ergo`, `recoil`, `weight`, `price` are deltas.
 - **Categories / slot types**: `categories[]`, `slotTypes{}`.
 
+## Model folders
+
+Models are organised by category. The same categories are the tabs / slot names in the site (defined in `categories` and `slotTypes` in `data/data.js`).
+
+```
+models/
+├── weapons/
+│   ├── assault-rifles/   dmrs/   smgs/   sniper-rifles/   pistols/   lmgs/   shotguns/
+└── parts/
+    ├── muzzle/   handguard/   optic/   stock/   pistol-grip/   magazine/
+    └── flashlight/   laser/   underbarrel/   slide/
+```
+
+Add a new category by adding an entry to `categories` / `slotTypes` and creating the matching folder.
+
 ## Supplying 3D models (GLB)
 
 Conventions: metres, Y up, barrel pointing **+X**, weapon's right side **+Z**.
 
-**Weapon GLB** → `models/weapons/<file>.glb`, then set `model: "models/weapons/<file>.glb"` on the weapon.
-Put an *empty node* in the GLB for every attachment point and name it `slot_<slotId>` (e.g. `slot_optic`, `slot_muzzle`, `slot_magazine`). Position/rotate the empty where the part's mount point should sit. In Blender, an Empty with that name exports as a glTF node. Slots with no node in the GLB fall back to the `anchor` in `data.js`.
+**Weapon GLB** → `models/weapons/<category>/<file>.glb`, then set `model: "<file>.glb"` on the weapon in `data/data.js` (the category folder is added for you; a value containing `/` is used as a full path).
+Put an *empty node* in the GLB for every attachment point and name it `slot_<slotId>`: `slot_muzzle`, `slot_handguard`, `slot_optic`, `slot_flashlight`, `slot_laser`, `slot_underbarrel`, `slot_grip`, `slot_magazine`, `slot_stock`, `slot_slide`. Position/rotate the empty where the part's mount point should sit. In Blender, an Empty with that name exports as a glTF node. Slots with no node in the GLB fall back to the `anchor` in `data.js`.
 
-**Part GLB** → `models/parts/<file>.glb`, then set `model: "models/parts/<file>.glb"` on the part.
+**Part GLB** → `models/parts/<slot type>/<file>.glb`, then set `model: "<file>.glb"` on the part (folder is added from the part's `type`).
 Model each part with its **mount point at the origin (0,0,0)** and the same axes as the weapon; it is dropped onto the slot anchor. Optional per-part tweaks: `scale`, `rot: [x,y,z]` (degrees), `offset: [x,y,z]` (metres).
 
 Anything without a model renders as a placeholder shape sized from the slot's `anchor.size`, so models can be added gradually. Optional `thumb: "path.png"` on a part sets its list thumbnail.

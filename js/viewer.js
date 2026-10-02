@@ -11,13 +11,15 @@ const GROW = {
   muzzle: [1, 0, 0], handguard: [1, 0, 0], slide: [1, 0, 0],
   stock: [-1, 0, 0],
   grip: [0, -1, 0], magazine: [0, -1, 0], underbarrel: [0, -1, 0],
-  optic: [0, 1, 0], tactical: [0, 1, 0]
+  optic: [0, 1, 0], flashlight: [0, 1, 0], laser: [0, 1, 0]
 };
 
+const RIFLE_BODY = { recv: [0.136, 0.056, 0.04, -0.012, 0.012], barrel: [0.26, 0.007, 0.18, 0.0215] };
+const SMG_BODY = { recv: [0.12, 0.056, 0.04, 0.0, 0.0], barrel: [0.2, 0.007, 0.14, 0.012] };
 const BODY = {
-  rifle:  { recv: [0.136, 0.056, 0.04, -0.012, 0.012], barrel: [0.26, 0.007, 0.18, 0.0215] },
-  smg:    { recv: [0.12, 0.056, 0.04, 0.0, 0.0], barrel: [0.2, 0.007, 0.14, 0.012] },
-  pistol: { recv: [0.264, 0.02, 0.03, -0.004, 0.006] }
+  "assault-rifles": RIFLE_BODY, dmrs: RIFLE_BODY, "sniper-rifles": RIFLE_BODY, lmgs: RIFLE_BODY, shotguns: RIFLE_BODY,
+  smgs: SMG_BODY,
+  pistols: { recv: [0.264, 0.02, 0.03, -0.004, 0.006] }
 };
 
 export class Viewer {
@@ -174,7 +176,7 @@ export class Viewer {
 
   placeholderBody(cat) {
     const g = new THREE.Group();
-    const spec = BODY[cat] || BODY.rifle;
+    const spec = BODY[cat] || RIFLE_BODY;
     const m = this.mat("#2f3640");
     const [w, h, d, x, y] = spec.recv;
     const recv = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
@@ -204,7 +206,7 @@ export class Viewer {
     };
     switch (type) {
       case "muzzle": add(cylX(sx, Math.min(sy, sz) / 2)); break;
-      case "tactical": add(cylX(sx, Math.min(sx, sy) * 0.4)); break;
+      case "flashlight": case "laser": add(cylX(sx, Math.min(sx, sy) * 0.4)); break;
       case "optic": {
         add(cylX(sx, sy * 0.3), new THREE.Vector3(0, sy * 0.7, 0));
         add(new THREE.Mesh(new THREE.BoxGeometry(sx * 0.4, sy * 0.4, sz * 0.5), m), new THREE.Vector3(0, sy * 0.2, 0));

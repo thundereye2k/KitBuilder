@@ -2,6 +2,14 @@ import { Viewer } from "./viewer.js";
 
 (() => {
   const D = window.KITBUILDER_DATA;
+
+  // A bare file name ("red-dot.glb") resolves into the folder of its category / slot type.
+  const inFolder = (base, folder, file) => (file && !file.includes("/") ? `${base}/${folder}/${file}` : file);
+  D.weapons.forEach((w) => {
+    const cat = D.categories.find((c) => c.id === w.category);
+    w.model = inFolder("models/weapons", cat.folder, w.model);
+  });
+  D.parts.forEach((p) => { p.model = inFolder("models/parts", D.slotTypes[p.type].folder, p.model); });
   const $ = (id) => document.getElementById(id);
 
   const state = { category: D.categories[0].id, weaponId: null, parts: {}, slot: null, labels: false };
@@ -74,14 +82,19 @@ import { Viewer } from "./viewer.js";
       b.onclick = () => {
         state.category = c.id;
         const first = D.weapons.find((w) => w.category === c.id);
-        if (first) selectWeapon(first.id);
+        if (first) selectWeapon(first.id); else renderTop();
       };
       nav.appendChild(b);
     });
 
     const list = $("weapon-list");
     list.innerHTML = "";
-    D.weapons.filter((w) => w.category === state.category).forEach((w) => {
+    const inCat = D.weapons.filter((w) => w.category === state.category);
+    if (!inCat.length) {
+      const folder = D.categories.find((c) => c.id === state.category).folder;
+      list.innerHTML = `<li class="empty">No weapons yet.<small>Add them in data/data.js and put models in models/weapons/${folder}/</small></li>`;
+    }
+    inCat.forEach((w) => {
       const li = document.createElement("li");
       const b = document.createElement("button");
       b.className = w.id === state.weaponId ? "on" : "";
@@ -143,6 +156,7 @@ import { Viewer } from "./viewer.js";
     const w = weapon();
     const slot = w.slots.find((s) => s.id === state.slot) || w.slots[0];
     $("parts-title").textContent = slot.name;
+    $("parts-title").title = `models/parts/${D.slotTypes[slot.type].folder}/`;
 
     const tabs = $("slot-tabs");
     tabs.innerHTML = "";
@@ -170,7 +184,14 @@ import { Viewer } from "./viewer.js";
       list.appendChild(li);
     };
     addRow(null);
-    partsFor(w, slot).forEach(addRow);
+    const avail = partsFor(w, slot);
+    avail.forEach(addRow);
+    if (!avail.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.innerHTML = `No ${D.slotTypes[slot.type].name.toLowerCase()} parts for this weapon yet.<small>Models go in models/parts/${D.slotTypes[slot.type].folder}/</small>`;
+      list.appendChild(li);
+    }
   }
 
   function render() {
