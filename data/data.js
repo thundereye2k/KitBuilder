@@ -61,7 +61,7 @@ window.KITBUILDER_DATA = {
 
   weapons: [
     {
-      id: "carbine-556", model: "carbine-556.glb", name: "Carbine 5.56", category: "assault-rifles", caliber: "5.56x45",
+      id: "carbine-556", model: "AR_15_receiver.glb", name: "Carbine 5.56", category: "assault-rifles", caliber: "5.56x45",
       base: { ergo: 45, recoil: 150, weight: 2.9, price: 900 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.288, 0.024, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, default: "flash-hider" },
