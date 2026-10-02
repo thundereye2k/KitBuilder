@@ -75,7 +75,7 @@ window.KITBUILDER_DATA = {
         { id: "flashlight", type: "flashlight",  name: "Flashlight", anchor: { pos: [0.2, 0.02, 0.03], rot: [0, 0, 0], size: [0.072, 0.0288, 0.03] } },
         { id: "laser", type: "laser",  name: "Laser", anchor: { pos: [0.2, 0.02, -0.03], rot: [0, 0, 0], size: [0.072, 0.0288, 0.03] } },
         { id: "underbarrel", type: "underbarrel", name: "Underbarrel", anchor: { pos: [0.2, -0.018, 0], rot: [0, 0, 0], size: [0.064, 0.08, 0.03] } },
-        { id: "grip",     type: "grip",      name: "Pistol Grip", anchor: { pos: [-0.046, -0.045, 0], rot: [0, 0, 0], size: [0.064, 0.088, 0.04] }, default: "grip-a2" },
+        { id: "grip",     type: "grip",      name: "Pistol Grip", anchor: { pos: [-0.092, -0.0303, 0], rot: [0, 0, 0], size: [0.064, 0.088, 0.04] }, default: "grip-a2" },
         { id: "magazine", type: "magazine",  name: "Magazine",    anchor: { pos: [0.035, -0.01, 0], rot: [0, 0, 0], size: [0.064, 0.112, 0.035] }, default: "pmag-30" },
         { id: "stock",    type: "stock",     name: "Stock",       anchor: { pos: [-0.104, -0.0072, 0], rot: [0, 0, 0], size: [0.216, 0.088, 0.05] }, default: "stock-fixed" }
       ]
@@ -195,7 +195,7 @@ window.KITBUILDER_DATA = {
 
     /* ---- Grips ---- */
     { id: "grip-a2", model: "grip-a2.glb",     name: "Standard Grip", type: "grip", fits: LONG, ergo: 0, recoil: 0, weight: 0.10, price: 20, color: "#3f3f46" },
-    { id: "grip-ergo", model: "AR_15_Grip.glb",   name: "Ergo Grip",     type: "grip", fits: LONG, ergo: 4, recoil: -2, weight: 0.12, price: 45, color: "#52525b" },
+    { id: "grip-ergo", model: "AR_15_Grip.glb", scale: 0.01, rot: [0, -90, 0], offset: [0.224, 0.0303, 0],   name: "Ergo Grip",     type: "grip", fits: LONG, ergo: 4, recoil: -2, weight: 0.12, price: 45, color: "#52525b" },
     { id: "grip-pistol", model: "grip-pistol.glb", name: "Standard Frame", type: "grip", fits: ["pistols"], ergo: 0, recoil: 0, weight: 0.0, price: 0, color: "#3f3f46" },
     { id: "grip-stipple", model: "grip-stipple.glb", name: "Stippled Frame", type: "grip", fits: ["pistols"], ergo: 5, recoil: -4, weight: 0.0, price: 90, color: "#52525b" },
 
