@@ -4,11 +4,11 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
 const DEG = Math.PI / 180;
 const ACCENT = 0xe8a33d;
-const OUTLINE_PX = 2.5; // thickness of the selection outline, in screen pixels
+const OUTLINE_CSS_PX = 2.5; // thickness of the selection outline (screen pixels)
+const CLOSE_CSS_PX = 10;    // holes / slots narrower than this are filled, so only the outer edge is outlined
 
 /* Which way a placeholder grows from its mount point (anchor origin). */
 const GROW = {
@@ -59,18 +59,6 @@ function isFlat(geometry) {
   return s[2] > 0 && s[0] / s[2] < 0.03;
 }
 
-const outlineGeoCache = new WeakMap();
-function outlineGeometry(src) {
-  if (outlineGeoCache.has(src)) return outlineGeoCache.get(src);
-  let g = new THREE.BufferGeometry();
-  g.setAttribute("position", src.attributes.position);
-  if (src.index) g.setIndex(src.index);
-  g = mergeVertices(g, 1e-3);   // weld vertices that were split for hard edges / UVs
-  g.computeVertexNormals();     // then smooth normals: the inflated copy stays closed
-  outlineGeoCache.set(src, g);
-  return g;
-}
-
 function fixBlendMaterials(root) {
   root.traverse((o) => {
     if (!o.isMesh) return;
@@ -100,14 +88,16 @@ export class Viewer {
     this.hovered = null;
     this.onSlotClick = () => {};
     this.token = 0;
-    this.outlineRes = new THREE.Vector2(1, 1); // CSS pixel size of the view, shared by all outline materials
+    this.outlineIds = [];       // slots whose part is currently outlined
+    this.outlineDirty = true;   // the outline is only rebuilt when the view or selection changes
 
-    const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, stencil: true }));
+    const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }));
     r.setPixelRatio(Math.min(devicePixelRatio, matchMedia("(hover: none)").matches ? 1.75 : 2));
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(r.domElement);
 
+    this.initOutline();
     this.scene = new THREE.Scene();
     const pmrem = new THREE.PMREMGenerator(r);
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -118,11 +108,16 @@ export class Viewer {
     this.camera = new THREE.PerspectiveCamera(32, 2, 0.01, 20);
     this.controls = new OrbitControls(this.camera, r.domElement);
     this.controls.enableDamping = true;
+    this.controls.addEventListener("change", () => { this.outlineDirty = true; });
+    // on touch devices skip the outline while the finger is moving the camera; it returns on release
+    const coarse = matchMedia("(hover: none)").matches;
+    this.controls.addEventListener("start", () => { this.interacting = coarse; });
+    this.controls.addEventListener("end", () => { this.interacting = false; this.outlineDirty = true; });
     this.controls.enablePan = false;
     this.controls.minDistance = 0.25;
     this.controls.maxDistance = 3;
 
-    const grid = new THREE.GridHelper(2, 40, 0x3a4350, 0x262c35);
+    const grid = this.grid = new THREE.GridHelper(2, 40, 0x3a4350, 0x262c35);
     grid.position.y = -0.2;
     this.scene.add(grid);
 
@@ -230,64 +225,144 @@ export class Viewer {
       obj.traverse((o) => { if (o.isMesh) o.userData.slotId = slotId; });
       s.anchor.add(obj);
       s.partObj = obj;
-      this.addOutline(s);
     }
     this.fitMarker(s);
     this.refreshMarkers();
   }
 
 
-  /**
-   * Selection outline that follows the part's real shape: every mesh gets a copy drawn "inside out" and
-   * pushed outwards by a few screen pixels. It only shows where it sticks out past the part itself.
+  /* ---------- selection outline ----------
+   * Clean outer edge of the selected part(s), done in screen space:
+   *  1. draw the part's silhouette (hidden behind other geometry where it is covered) into a small texture,
+   *  2. "close" it (grow, then shrink by the same amount) so slots, windows and holes are filled,
+   *  3. grow it a few more pixels; the difference between the two is the outline ring.
+   * Everything runs at half resolution and is only redone when the camera, selection or a part changes.
    */
-  addOutline(s) {
-    if (!s.outlineMat) {
-      s.outlineMat = new THREE.ShaderMaterial({
-        uniforms: { uColor: { value: new THREE.Color(ACCENT) }, uOpacity: { value: 0 }, uPx: { value: OUTLINE_PX }, uRes: { value: this.outlineRes } },
-        vertexShader: `
-          uniform vec2 uRes; uniform float uPx;
-          void main() {
-            vec4 clip = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            vec3 n = normalize(normalMatrix * normal);
-            vec2 dir = (projectionMatrix * vec4(n, 0.0)).xy;
-            dir = length(dir) > 1e-5 ? normalize(dir) : vec2(0.0);
-            clip.xy += dir * uPx * 2.0 / uRes * clip.w;
-            gl_Position = clip;
-          }`,
-        fragmentShader: `uniform vec3 uColor; uniform float uOpacity; void main() { gl_FragColor = vec4(uColor, uOpacity); }`,
-        side: THREE.BackSide, transparent: true, depthWrite: false,
-        // only draw where the part itself did not (see mask meshes below): a clean outer silhouette, no inner lines
-        stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc,
-        stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp
-      });
-      s.maskMat = new THREE.MeshBasicMaterial({
-        colorWrite: false, depthWrite: false,
-        stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc,
-        stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.ReplaceStencilOp
-      });
-    }
-    const meshes = [];
-    s.partObj.traverse((o) => { if (o.isMesh && o.visible && !o.material.transparent) meshes.push(o); });
-    for (const m of meshes) {
-      const ol = new THREE.Mesh(outlineGeometry(m.geometry), s.outlineMat);
-      ol.raycast = () => {};
-      ol.renderOrder = 2;
-      ol.visible = false;
-      ol.userData.isOutline = true;
-      m.add(ol);
-      const mask = new THREE.Mesh(m.geometry, s.maskMat);   // marks the part's own pixels in the stencil buffer
-      mask.raycast = () => {};
-      mask.renderOrder = 1;
-      mask.visible = false;
-      mask.userData.isOutline = true;
-      m.add(mask);
-    }
+  initOutline() {
+    const opts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, depthBuffer: false };
+    this.rt = [new THREE.WebGLRenderTarget(2, 2, { ...opts, depthBuffer: true }), new THREE.WebGLRenderTarget(2, 2, opts), new THREE.WebGLRenderTarget(2, 2, opts)];
+    this.fsScene = new THREE.Scene();
+    this.fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.fsQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), null);
+    this.fsQuad.frustumCulled = false;
+    this.fsScene.add(this.fsQuad);
+    const vert = "varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }";
+    this.morphMat = new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null }, uStep: { value: new THREE.Vector2() }, uR: { value: 1 }, uGrow: { value: 1 } },
+      vertexShader: vert,
+      fragmentShader: `
+        uniform sampler2D tDiffuse; uniform vec2 uStep; uniform float uR; uniform float uGrow; varying vec2 vUv;
+        void main() {
+          float v = texture2D(tDiffuse, vUv).r;
+          for (int i = 1; i <= 32; i++) {
+            if (float(i) > uR) break;
+            vec2 o = uStep * float(i);
+            float a = texture2D(tDiffuse, vUv + o).r, b = texture2D(tDiffuse, vUv - o).r;
+            v = uGrow > 0.5 ? max(v, max(a, b)) : min(v, min(a, b));
+          }
+          gl_FragColor = vec4(v, v, v, 1.0);
+        }`,
+      depthTest: false, depthWrite: false
+    });
+    this.ringMat = new THREE.ShaderMaterial({
+      uniforms: { tOuter: { value: null }, tInner: { value: null }, uTexel: { value: new THREE.Vector2() }, uColor: { value: new THREE.Vector3(0xe8 / 255, 0xa3 / 255, 0x3d / 255) } },
+      vertexShader: vert,
+      fragmentShader: `
+        uniform sampler2D tOuter; uniform sampler2D tInner; uniform vec2 uTexel; uniform vec3 uColor; varying vec2 vUv;
+        // tiny blur so the half-resolution edge looks smooth instead of stair-stepped
+        float soft(sampler2D t) {
+          vec2 o = uTexel * 0.8;
+          return 0.4 * texture2D(t, vUv).r + 0.15 * (texture2D(t, vUv + vec2(o.x, 0.0)).r + texture2D(t, vUv - vec2(o.x, 0.0)).r
+                                                   + texture2D(t, vUv + vec2(0.0, o.y)).r + texture2D(t, vUv - vec2(0.0, o.y)).r);
+        }
+        void main() {
+          float ring = clamp(soft(tOuter) - soft(tInner), 0.0, 1.0);
+          gl_FragColor = vec4(uColor, smoothstep(0.0, 0.9, ring));
+        }`,
+      transparent: true, depthTest: false, depthWrite: false
+    });
+    this.depthMat = new THREE.MeshBasicMaterial({ colorWrite: false });
+    this.whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   }
 
-  setOutline(s, on) {
-    s.outlineMat.uniforms.uOpacity.value = on ? 1 : 0;
-    s.partObj.traverse((o) => { if (o.userData.isOutline) o.visible = on; });
+  fsPass(mat, target) {
+    this.fsQuad.material = mat;
+    this.renderer.setRenderTarget(target);
+    this.renderer.render(this.fsScene, this.fsCam);
+  }
+
+  morph(src, dst, horizontal, grow, radius) {
+    const m = this.morphMat, t = this.rt[0];
+    m.uniforms.tDiffuse.value = src.texture;
+    m.uniforms.uStep.value.set(horizontal ? 1 / t.width : 0, horizontal ? 0 : 1 / t.height);
+    m.uniforms.uR.value = radius;
+    m.uniforms.uGrow.value = grow ? 1 : 0;
+    this.fsPass(m, dst);
+  }
+
+  buildOutline() {
+    this.outlineDirty = false;
+    const r = this.renderer;
+    const targets = this.outlineIds.map((id) => this.slots[id]).filter((s) => s && s.partObj);
+    if (!targets.length) return;
+    const [A, B, C] = this.rt;
+    const scale = r.getPixelRatio() * 0.5;
+    const closeR = Math.min(32, Math.max(1, Math.round(CLOSE_CSS_PX * scale)));
+    const edgeR = Math.min(32, Math.max(1, Math.round(OUTLINE_CSS_PX * scale)));
+
+    // mark which meshes belong to the outlined parts (layer 1)
+    for (const id in this.slots) if (this.slots[id].partObj) this.slots[id].partObj.traverse((o) => o.layers.disable(1));
+    targets.forEach((s) => s.partObj.traverse((o) => { if (o.isMesh && o.visible && !o.material.transparent) o.layers.enable(1); }));
+
+    const prevAuto = r.autoClear, prevTarget = r.getRenderTarget();
+    const hidden = [this.grid, ...Object.values(this.slots).map((s) => s.marker), ...targets.map((s) => s.partObj)];
+    const wasVisible = hidden.map((o) => o.visible);
+
+    // 1a. everything except the outlined parts -> depth only (acts as the occluder)
+    hidden.forEach((o) => { o.visible = false; });
+    for (const id in this.slots) { const s = this.slots[id]; if (s.partObj && !targets.includes(s)) s.partObj.visible = true; }
+    r.setRenderTarget(A);
+    r.autoClear = true;
+    r.setClearColor(0x000000, 1);
+    this.scene.overrideMaterial = this.depthMat;
+    r.render(this.scene, this.camera);
+
+    // 1b. the outlined parts, white, depth-tested against the occluders
+    hidden.forEach((o, i) => { o.visible = wasVisible[i]; });
+    this.camera.layers.set(1);
+    r.autoClear = false;
+    this.scene.overrideMaterial = this.whiteMat;
+    r.render(this.scene, this.camera);
+    this.scene.overrideMaterial = null;
+    this.camera.layers.set(0);
+
+    // 2. close the silhouette (grow then shrink): A -> C -> B -> C -> A
+    this.morph(A, B, true, true, closeR);
+    this.morph(B, C, false, true, closeR);
+    this.morph(C, B, true, false, closeR);
+    this.morph(B, A, false, false, closeR);      // A = filled silhouette
+    // 3. grow it by the outline thickness: A -> B -> C (C = outer edge of the ring)
+    this.morph(A, B, true, true, edgeR);
+    this.morph(B, C, false, true, edgeR);
+
+    r.setClearColor(0x000000, 0);
+    r.setRenderTarget(prevTarget);
+    r.autoClear = prevAuto;
+    this.ringMat.uniforms.tOuter.value = C.texture;
+    this.ringMat.uniforms.tInner.value = A.texture;
+    this.ringMat.uniforms.uTexel.value.set(1 / A.width, 1 / A.height);
+  }
+
+  drawOutline() {
+    if (!this.outlineIds.length || this.interacting) return;
+    if (this.outlineDirty) this.buildOutline();
+    if (!this.ringMat.uniforms.tOuter.value) return;
+    const r = this.renderer, prev = r.autoClear;
+    r.autoClear = false;
+    r.setRenderTarget(null);
+    this.fsQuad.material = this.ringMat;
+    r.render(this.fsScene, this.fsCam);
+    r.autoClear = prev;
   }
 
   /** Bounding box of an object in the local space of `anchor` (not axis-aligned in the world if the anchor is rotated). */
@@ -327,7 +402,7 @@ export class Viewer {
    * All numbers are "shifts" in metres relative to the slot's default position along X. */
   shiftSlot(slotId, dx) {
     const s = this.slots[slotId];
-    if (s) s.anchor.position.x = s.baseX + dx;
+    if (s) { s.anchor.position.x = s.baseX + dx; this.outlineDirty = true; }
   }
 
   /**
@@ -466,9 +541,10 @@ export class Viewer {
       const line = filled ? 0 : active || hover ? 1 : 0.45;
       s.marker.material.opacity = fill;
       s.marker.userData.edges.material.opacity = line;
-      if (filled && s.outlineMat) this.setOutline(s, active || hover);
       s.label.classList.toggle("on", active);
     }
+    this.outlineIds = Object.keys(this.slots).filter((id) => this.slots[id].partObj && (id === this.activeSlot || id === this.hovered));
+    this.outlineDirty = true;
   }
 
   fit() {
@@ -485,7 +561,9 @@ export class Viewer {
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (!w || !h) return;
     this.renderer.setSize(w, h, false);
-    this.outlineRes.set(w, h);
+    const k = this.renderer.getPixelRatio() * 0.5;
+    this.rt.forEach((t) => t.setSize(Math.max(2, Math.round(w * k)), Math.max(2, Math.round(h * k))));
+    this.outlineDirty = true;
     const aspect = w / h;
     // layout changed a lot (rotation, breakpoint): reframe so the weapon is not cropped
     const reframe = this.lastAspect && Math.abs(aspect - this.lastAspect) / this.lastAspect > 0.15 && this.root.children.length;
@@ -529,6 +607,7 @@ export class Viewer {
   frame() {
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
+    this.drawOutline();
     const w = this.container.clientWidth, h = this.container.clientHeight;
     const v = new THREE.Vector3();
     for (const id in this.slots) {
