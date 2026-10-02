@@ -34,7 +34,6 @@
  *   ergo, recoil, weight (kg), price  -> deltas applied to the weapon base stats
  *   model  (optional) -> file name inside models/parts/<slot type folder>/, e.g. "red-dot.glb"
  *             (a value containing "/" is used as a path as-is)
- *   hide   (optional) -> node names inside the GLB to hide, e.g. an integrated flash hider you want to replace
  *   scale / rot / offset (optional) -> extra transform on the part model: scale number, rot [deg x3], offset [x,y,z] m
  *   size   (optional) -> [x, y] override of placeholder size
  *   color  (optional) -> placeholder colour when there is no model
@@ -74,7 +73,7 @@ window.KITBUILDER_DATA = {
       id: "carbine-556", model: "AR_15_receiver.glb", scale: 0.01, rot: [0, -90, 0], offset: [0.132, 0, 0], hide: ["Cube"], name: "Carbine 5.56", category: "assault-rifles", caliber: "5.56x45",
       base: { ergo: 45, recoil: 150, weight: 2.9, price: 900 },
       slots: [
-        { id: "barrel",   type: "barrel",    name: "Barrel",      anchor: { pos: [0.1047, 0, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-ar-16" },
+        { id: "barrel",   type: "barrel",    name: "Barrel",      anchor: { pos: [0.1, 0, 0], rot: [0, 0, 0], size: [0.36, 0.014, 0.014] }, default: "barrel-ar-16" },
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.34, 0, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, follows: { slot: "barrel", offset: -0.01 }, default: "flash-hider" },
         { id: "handguard",type: "handguard", name: "Handguard",   anchor: { pos: [0.1, 0.006, 0], rot: [0, 0, 0], size: [0.24, 0.048, 0.06] }, default: "hg-polymer" },
         { id: "optic",    type: "optic",     name: "Optic",       anchor: { pos: [0, 0.03, 0], rot: [0, 0, 0], size: [0.152, 0.064, 0.045] }, rail: { min: -0.097, max: 0.1, extend: "handguard", ignore: ["barrel"] } },
@@ -185,7 +184,7 @@ window.KITBUILDER_DATA = {
     /* ---- Barrel (model origin = the receiver end of the barrel, pointing +X; the muzzle device follows its far end) ---- */
     { id: "barrel-ar-10",     model: "barrel-ar-10.glb",     name: "10.5\" Barrel",       type: "barrel", fits: ["assault-rifles", "lmgs"], ergo: 6,  recoil: 10,  weight: -0.35, price: 160, size: [0.20, 0.014], color: "#374151" },
     { id: "barrel-ar-14",     model: "barrel-ar-14.glb",     name: "14.5\" Barrel",       type: "barrel", fits: ["assault-rifles", "lmgs"], ergo: 3,  recoil: 4,   weight: -0.15, price: 180, size: [0.30, 0.014], color: "#374151" },
-    { id: "barrel-ar-16",     model: "AR_15_16_inch_barrel.glb", scale: 0.01, rot: [0, -90, 0], offset: [0.0273, 0, 0], hide: ["M4_Barrel_4_Flash_Hider"],     name: "16\" Barrel",         type: "barrel", fits: ["assault-rifles", "lmgs"], ergo: 0,  recoil: 0,   weight: 0,     price: 190, size: [0.36, 0.014], color: "#374151" },
+    { id: "barrel-ar-16",     model: "AR_15_16_inch_barrel.glb",     name: "16\" Barrel",         type: "barrel", fits: ["assault-rifles", "lmgs"], ergo: 0,  recoil: 0,   weight: 0,     price: 190, size: [0.36, 0.014], color: "#374151" },
     { id: "barrel-ar-20",     model: "barrel-ar-20.glb",     name: "20\" Heavy Barrel",   type: "barrel", fits: ["assault-rifles", "lmgs"], ergo: -5, recoil: -8,  weight: 0.45,  price: 230, size: [0.46, 0.016], color: "#2d3643" },
     { id: "barrel-dmr-18",    model: "barrel-dmr-18.glb",    name: "18\" Match Barrel",   type: "barrel", fits: ["dmrs"],                   ergo: 2,  recoil: 6,   weight: -0.3,  price: 320, size: [0.40, 0.016], color: "#374151" },
     { id: "barrel-dmr-20",    model: "barrel-dmr-20.glb",    name: "20\" Match Barrel",   type: "barrel", fits: ["dmrs"],                   ergo: 0,  recoil: 0,   weight: 0,     price: 360, size: [0.46, 0.016], color: "#374151" },
