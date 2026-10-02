@@ -36,7 +36,7 @@ export class Viewer {
     this.token = 0;
 
     const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }));
-    r.setPixelRatio(Math.min(devicePixelRatio, 2));
+    r.setPixelRatio(Math.min(devicePixelRatio, matchMedia("(hover: none)").matches ? 1.75 : 2));
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(r.domElement);
@@ -261,8 +261,13 @@ export class Viewer {
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (!w || !h) return;
     this.renderer.setSize(w, h, false);
-    this.camera.aspect = w / h;
+    const aspect = w / h;
+    // layout changed a lot (rotation, breakpoint): reframe so the weapon is not cropped
+    const reframe = this.lastAspect && Math.abs(aspect - this.lastAspect) / this.lastAspect > 0.15 && this.root.children.length;
+    this.lastAspect = aspect;
+    this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
+    if (reframe) this.fit();
   }
 
   pick(e) {

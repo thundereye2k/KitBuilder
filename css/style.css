@@ -4,7 +4,8 @@
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html{-webkit-text-size-adjust:100%}
+html,body{margin:0;max-width:100%;overflow-x:clip;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 body{min-height:100vh;background:radial-gradient(1200px 500px at 50% -10%,#1a1f27,transparent),var(--bg)}
 h1,h2{margin:0;font-weight:700;letter-spacing:.04em}
 h1{font-size:22px}
@@ -20,7 +21,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tab:hover{color:var(--text)}
 .tab.on{color:var(--accent);border-color:var(--accent-d);background:rgba(232,163,61,.07)}
 .actions{display:flex;gap:8px}
-.btn{background:var(--accent);color:#17120a;border:1px solid var(--accent);padding:6px 12px;border-radius:4px;font-weight:600;font-size:12px}
+.btn{white-space:nowrap;background:var(--accent);color:#17120a;border:1px solid var(--accent);padding:6px 12px;border-radius:4px;font-weight:600;font-size:12px}
 .btn:hover{filter:brightness(1.1)}
 .btn.ghost{background:none;color:var(--text);border-color:var(--line)}
 .btn.ghost:hover{border-color:var(--muted)}
@@ -34,6 +35,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .weapon-list button.on{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
 .weapon-list small{display:block;color:var(--muted);font-family:var(--mono);font-size:11px}
 
+.stage-wrap{min-width:0}
 .stage-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 .stage{background:
   linear-gradient(var(--line) 1px,transparent 1px) 0 0/40px 40px,
@@ -82,14 +84,85 @@ button{font:inherit;color:inherit;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--accent);color:#17120a;padding:8px 14px;border-radius:4px;font-weight:600;opacity:0;pointer-events:none;transition:.2s}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
-@media (max-width:1100px){
-  .layout{grid-template-columns:1fr}
-  .weapons{order:0} .weapon-list{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-  .part-list{max-height:none}
-}
-@media (max-width:560px){ .stats{grid-template-columns:repeat(2,1fr)} .top{gap:10px} }
 
 [hidden]{display:none!important}
 .part .mods:empty{display:none}
 .empty{color:var(--muted);padding:8px 2px;font-size:13px}.empty small{display:block;font:11px var(--mono);margin-top:4px}
 .tabs{flex-wrap:wrap}
+
+.hint .h-t{display:none}
+@media (hover:none){ .hint .h-d{display:none} .hint .h-t{display:inline} }
+
+/* ---------- tablets / phones ---------- */
+@media (max-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:10px;padding:10px 12px calc(16px + env(safe-area-inset-bottom));padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+  /* flatten the centre column so the 3D view can stay pinned above the parts list */
+  .stage-wrap{display:contents}
+  .weapons{order:1;padding:8px}
+  .stage-head{order:2;margin:2px 0 0}
+  .stage{order:3;position:sticky;top:0;z-index:6;box-shadow:0 6px 16px rgba(0,0,0,.45)}
+  .viewport{aspect-ratio:4/3;min-height:0;max-height:46vh;max-height:46dvh}
+  .parts{order:4}
+  .stats{order:5;margin:0}
+  .build-list{order:6;margin:0}
+
+  .weapons h2{display:none}
+  .weapon-list{display:flex;overflow-x:auto;gap:8px;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .weapon-list::-webkit-scrollbar{display:none}
+  .weapon-list li{flex:0 0 auto}
+  .weapon-list li.empty{white-space:normal}
+  .weapon-list button{width:auto;min-width:140px;min-height:48px}
+
+  .part-list{max-height:none;overflow:visible}
+}
+
+@media (max-width:900px){
+  h1{font-size:19px}
+  .top{position:static;display:grid;grid-template-columns:1fr auto;gap:8px 10px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top))}
+  .brand{font-size:14px}
+  .actions{gap:6px}
+  .top .actions .btn{padding:8px 10px;min-height:38px}
+  .brand{white-space:nowrap}
+  .tabs{grid-column:1/-1;order:3;flex-wrap:nowrap;overflow-x:auto;gap:6px;margin:0 -12px;padding:0 12px 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;white-space:nowrap;min-height:38px;padding:8px 14px;border-color:var(--line)}
+  .tab.on{border-color:var(--accent-d)}
+
+  /* stage header: title left, view buttons right, compact */
+  .stage-head .actions .btn{padding:7px 10px;min-height:36px;font-size:12px}
+  .muted{font-size:11px}
+  .viewport{max-height:42vh;max-height:42dvh}
+
+  .slot-tabs{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px 10px;padding:0 14px 2px;scrollbar-width:none}
+  .slot-tabs::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;white-space:nowrap;min-height:36px;padding:6px 14px;font-size:13px}
+  .part{min-height:56px;padding:8px 10px}
+  .part .mods{font-size:11px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .build-row{padding:12px}
+  .hint{font-size:10px;left:8px;bottom:6px}
+  .toast{bottom:calc(20px + env(safe-area-inset-bottom));max-width:90vw;text-align:center}
+}
+
+@media (max-width:420px){ .top .actions .btn{padding:8px;font-size:11px} .brand{letter-spacing:.12em;font-size:13px} .weapon-list button{min-width:120px} }
+
+@media (max-width:359px){ .top{grid-template-columns:1fr} .top .actions{order:2} .stage-head{flex-wrap:wrap;gap:8px} }
+
+/* short landscape phones: 3D view on the left (pinned), parts on the right */
+@media (max-height:480px) and (orientation:landscape) and (max-width:1100px){
+  .layout{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start;column-gap:12px}
+  .weapons{grid-column:1/-1}
+  .stage-head{grid-column:1;grid-row:2}
+  .stage{grid-column:1;grid-row:3/span 3;top:8px}
+  .viewport{aspect-ratio:16/10;max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px)}
+  .parts{grid-column:2;grid-row:2/span 2}
+  .build-list{grid-column:2;grid-row:4}
+  .stats{grid-column:2}
+  /* one-row header, tighter chrome so the 3D view is on screen straight away */
+  .top{grid-template-columns:auto minmax(0,1fr) auto;padding:6px 12px;gap:10px}
+  .tabs{grid-column:auto;order:0;margin:0;padding:0}
+  .weapons{padding:6px}
+  .weapon-list button{min-height:40px;padding:6px 12px}
+  .stage-head .muted{display:none}
+  .stage-head h1{font-size:16px}
+}

@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1013">
   <title>KitBuilder — Weapon Kit Configurator</title>
   <meta name="description" content="Configure rifles, SMGs and pistols with optics, stocks, handguards, grips, lights and lasers.">
   <link rel="stylesheet" href="css/style.css">
@@ -14,7 +15,7 @@
     <div class="actions">
       <button id="btn-reset" class="btn ghost">Reset</button>
       <button id="btn-share" class="btn">Copy link</button>
-      <button id="btn-export" class="btn ghost">Export JSON</button>
+      <button id="btn-export" class="btn ghost">Export</button>
     </div>
   </header>
 
@@ -33,7 +34,7 @@
         <div class="actions"><button id="btn-view" class="btn ghost">Reset view</button><button id="btn-labels" class="btn ghost" aria-pressed="false">Slot labels</button></div>
       </div>
       <div class="stage"><div id="viewport" class="viewport"></div><div id="labels" class="labels"></div>
-        <div class="hint">Drag to rotate · scroll to zoom · click a part or slot</div></div>
+        <div class="hint"><span class="h-d">Drag to rotate · scroll to zoom · click a part or slot</span><span class="h-t">Drag to rotate · pinch to zoom · tap a slot</span></div></div>
 
       <div id="stats" class="stats"></div>
       <div id="build-list" class="build-list"></div>
