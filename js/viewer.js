@@ -216,7 +216,38 @@ export class Viewer {
       s.anchor.add(obj);
       s.partObj = obj;
     }
+    this.fitMarker(s);
     this.refreshMarkers();
+  }
+
+  /** Bounding box of an object in the local space of `anchor` (not axis-aligned in the world if the anchor is rotated). */
+  localBounds(obj, anchor) {
+    this.body.updateMatrixWorld(true);
+    const inv = anchor.matrixWorld.clone().invert();
+    const box = new THREE.Box3();
+    obj.traverse((o) => {
+      if (!o.isMesh || !o.visible) return;
+      o.geometry.computeBoundingBox();
+      box.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld.clone().premultiply(inv)));
+    });
+    return box.isEmpty() ? null : box;
+  }
+
+  /** Outline box: the slot's default zone while empty, the part's own bounding box once something is installed. */
+  fitMarker(s) {
+    const m = s.marker, d = m.userData.defaultBox;
+    let size = d.size, center = d.center;
+    const b = s.partObj && this.localBounds(s.partObj, s.anchor);
+    if (b) {
+      size = b.getSize(new THREE.Vector3()).addScalar(0.002); // 1 mm of breathing room per side
+      center = b.getCenter(new THREE.Vector3());
+    }
+    m.geometry.dispose();
+    m.geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+    m.position.copy(center);
+    const edges = m.userData.edges;
+    edges.geometry.dispose();
+    edges.geometry = new THREE.EdgesGeometry(m.geometry);
   }
 
 
@@ -350,6 +381,7 @@ export class Viewer {
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0 }));
     mesh.add(edges);
     mesh.userData.edges = edges;
+    mesh.userData.defaultBox = { size: new THREE.Vector3(sx, sy, sz), center: mesh.position.clone() };
     return mesh;
   }
 
