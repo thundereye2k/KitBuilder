@@ -66,7 +66,7 @@ window.KITBUILDER_DATA = {
 
   weapons: [
     {
-      id: "carbine-556", model: "AR_15_receiver.glb", scale: 0.01, rot: [0, -90, 0], offset: [0.132, 0, 0.008], hide: ["Cube"], name: "Carbine 5.56", category: "assault-rifles", caliber: "5.56x45",
+      id: "carbine-556", model: "AR_15_receiver.glb", scale: 0.01, rot: [0, -90, 0], offset: [0.132, 0, 0], hide: ["Cube"], name: "Carbine 5.56", category: "assault-rifles", caliber: "5.56x45",
       base: { ergo: 45, recoil: 150, weight: 2.9, price: 900 },
       slots: [
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.34, 0.006, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, default: "flash-hider" },
@@ -178,7 +178,7 @@ window.KITBUILDER_DATA = {
 
     /* ---- Handguard ---- */
     { id: "hg-polymer", model: "hg-polymer.glb", name: "Polymer Handguard", type: "handguard", fits: LONG, ergo: 0, recoil: 0, weight: 0.30, price: 50, color: "#3f3f46" },
-    { id: "hg-mlok", model: "AR_15_mlok_handguard.glb",    name: "M-LOK Handguard",   type: "handguard", fits: LONG, ergo: 4, recoil: -3, weight: 0.42, price: 220, color: "#52525b" },
+    { id: "hg-mlok", model: "AR_15_mlok_handguard.glb", scale: 0.01, rot: [0, -90, 0], offset: [0.032, -0.006, 0],    name: "M-LOK Handguard",   type: "handguard", fits: LONG, ergo: 4, recoil: -3, weight: 0.42, price: 220, color: "#52525b" },
     { id: "hg-short", model: "hg-short.glb",   name: "Short Rail",        type: "handguard", fits: LONG, ergo: 6, recoil: 4, weight: 0.22, price: 160, color: "#52525b", size: [0.16, 0.0448] },
 
     /* ---- Optics ---- */
