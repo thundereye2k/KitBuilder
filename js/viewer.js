@@ -368,7 +368,7 @@ export class Viewer {
     const EPS = 0.001; // 1 mm: touching is fine, overlapping is not
     const blocked = [];
     for (const id in this.slots) {
-      if (id === slotId || id === rail.extend || (rail.ignore || []).includes(id)) continue;
+      if (id === slotId || id === rail.extend) continue;
       const o = this.slots[id];
       if (!o.partObj) continue;
       const B = box(o.partObj);
