@@ -18,6 +18,17 @@ Or deploy the folder as-is to GitHub Pages / Netlify / Cloudflare Pages / any st
 - **Parts**: add to `parts[]`. `type` must match a slot type; `fits` is `"*"` or a list of weapon ids / category ids. `ergo`, `recoil`, `weight`, `price` are deltas.
 - **Categories / slot types**: `categories[]`, `slotTypes{}`.
 
+## 3D view controls
+
+| | PC | Phone / tablet |
+|---|---|---|
+| Rotate | left mouse drag | one finger |
+| Move the view | **right mouse drag** (or Shift + left drag) | **two fingers** drag |
+| Zoom | scroll wheel (or middle-drag) | pinch |
+| Reset | "Reset view" button | "Reset view" button |
+
+The view can be moved up to about 30 cm past the weapon, so it can't be lost off screen.
+
 ## Sliding parts along a rail
 
 A slot with a `rail` in `data/data.js` gets a **Position on rail** slider (plus ◀ ▶ nudge buttons and "Reset position") in the parts panel once a part is installed. Currently the optic slot of every weapon has one.

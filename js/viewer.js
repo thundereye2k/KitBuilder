@@ -118,7 +118,11 @@ export class Viewer {
     this.camera = new THREE.PerspectiveCamera(32, 2, 0.01, 20);
     this.controls = new OrbitControls(this.camera, r.domElement);
     this.controls.enableDamping = true;
-    this.controls.enablePan = false;
+    // moving the view: right mouse button / Shift+left drag on PC, two-finger drag on touch screens
+    this.controls.enablePan = true;
+    this.controls.screenSpacePanning = true;
+    this.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+    this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     this.controls.minDistance = 0.25;
     this.controls.maxDistance = 3;
 
@@ -492,6 +496,7 @@ export class Viewer {
     if (box.isEmpty()) return;
     const size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
     const dist = (Math.max(size.x / this.camera.aspect, size.y) / 2 / Math.tan(this.camera.fov * DEG / 2)) * 1.25 + size.z;
+    this.panBox = box.clone().expandByScalar(0.3);   // the view can be moved this far from the weapon, no further
     this.controls.target.copy(ctr);
     this.camera.position.set(ctr.x + dist * 0.25, ctr.y + dist * 0.18, ctr.z + dist);
     this.controls.update();
@@ -522,14 +527,22 @@ export class Viewer {
 
   bindPointer() {
     const el = this.renderer.domElement;
-    let down = null;
-    el.addEventListener("pointerdown", (e) => { down = [e.clientX, e.clientY]; });
+    let down = null, multi = false;
+    const pointers = new Set();
+    el.addEventListener("pointerdown", (e) => {
+      pointers.add(e.pointerId);
+      if (pointers.size > 1) multi = true;            // pinch / two-finger move is never a click
+      down = e.button === 0 ? [e.clientX, e.clientY] : null;   // right / middle button only move the view
+    });
+    const end = (e) => { pointers.delete(e.pointerId); if (!pointers.size) multi = false; };
+    el.addEventListener("pointercancel", end);
     el.addEventListener("pointerup", (e) => {
-      if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) {
+      if (down && !multi && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) {
         const id = this.pick(e);
         if (id) this.onSlotClick(id);
       }
       down = null;
+      end(e);
     });
     el.addEventListener("pointermove", (e) => {
       if (e.buttons) return;
@@ -544,6 +557,10 @@ export class Viewer {
 
   frame() {
     this.controls.update();
+    if (this.panBox) {   // keep the point we look at near the weapon so it cannot be lost off screen
+      const t = this.controls.target, c = t.clone().clamp(this.panBox.min, this.panBox.max);
+      if (!c.equals(t)) { c.sub(t); this.controls.target.add(c); this.camera.position.add(c); }
+    }
     this.renderer.render(this.scene, this.camera);
     const w = this.container.clientWidth, h = this.container.clientHeight;
     const v = new THREE.Vector3();
