@@ -59,6 +59,21 @@ function isFlat(geometry) {
   return s[2] > 0 && s[0] / s[2] < 0.03;
 }
 
+/** Bounding box of the visible meshes under `obj`, optionally transformed by `toLocal` (hidden nodes are ignored). */
+function visibleBounds(obj, toLocal) {
+  const box = new THREE.Box3();
+  (function walk(o) {
+    if (!o.visible) return;
+    if (o.isMesh && o.geometry) {
+      o.geometry.computeBoundingBox();
+      const m = toLocal ? o.matrixWorld.clone().premultiply(toLocal) : o.matrixWorld;
+      box.union(o.geometry.boundingBox.clone().applyMatrix4(m));
+    }
+    o.children.forEach(walk);
+  })(obj);
+  return box;
+}
+
 const outlineGeoCache = new WeakMap();
 function outlineGeometry(src) {
   if (outlineGeoCache.has(src)) return outlineGeoCache.get(src);
@@ -218,6 +233,7 @@ export class Viewer {
           if (part.scale) g.scale.setScalar(part.scale);
           if (part.rot) g.rotation.set(part.rot[0] * DEG, part.rot[1] * DEG, part.rot[2] * DEG);
           if (part.offset) g.position.fromArray(part.offset);
+          (part.hide || []).forEach((name) => { const n = g.getObjectByName(name); if (n) n.visible = false; });
           obj = g;
         } catch (e) { console.warn(`Part model failed: ${part.model}`, e); obj = null; }
       }
@@ -247,7 +263,7 @@ export class Viewer {
       const s = this.slots[id], f = s.def.follows;
       if (!f) continue;
       const src = this.slots[f.slot];
-      s.anchor.position.x = src && src.partObj ? new THREE.Box3().setFromObject(src.partObj).max.x + (f.offset || 0) : s.baseX;
+      s.anchor.position.x = src && src.partObj ? visibleBounds(src.partObj).max.x + (f.offset || 0) : s.baseX;
     }
   }
 
@@ -309,12 +325,7 @@ export class Viewer {
   localBounds(obj, anchor) {
     this.body.updateMatrixWorld(true);
     const inv = anchor.matrixWorld.clone().invert();
-    const box = new THREE.Box3();
-    obj.traverse((o) => {
-      if (!o.isMesh || !o.visible) return;
-      o.geometry.computeBoundingBox();
-      box.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld.clone().premultiply(inv)));
-    });
+    const box = visibleBounds(obj, inv);
     return box.isEmpty() ? null : box;
   }
 
@@ -355,7 +366,7 @@ export class Viewer {
     const rail = s && s.def.rail;
     if (!rail || !s.partObj) return null;
     this.body.updateMatrixWorld(true);
-    const box = (o) => new THREE.Box3().setFromObject(o);
+    const box = (o) => visibleBounds(o);
     const A = box(s.partObj);
     const mx = s.anchor.position.x, base = s.baseX;
     const relMin = A.min.x - mx, relMax = A.max.x - mx;
