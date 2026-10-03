@@ -26,6 +26,7 @@ Or deploy the folder as-is to GitHub Pages / Netlify / Cloudflare Pages / any st
 | Move the view | **right mouse drag** (or Shift + left drag) | switch to **Move** mode (button in the view), then drag with one finger |
 | Zoom | scroll wheel (or middle-drag) | pinch |
 | Reset | "Reset view" button | "Reset view" button |
+| Fullscreen | button in the top-right corner of the view (Esc to leave) | same button (works on iPhones too) |
 
 The **Rotate / Move** switch in the bottom-right of the view changes what a plain drag does (mouse and touch). Two fingers also move the view while pinching.
 

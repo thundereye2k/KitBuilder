@@ -362,11 +362,38 @@ import { Viewer } from "./viewer.js";
   $("mode-rotate").onclick = () => setMode("rotate");
   $("mode-move").onclick = () => setMode("move");
   $("btn-reset").onclick = () => selectWeapon(state.weaponId);
-  $("btn-labels").onclick = (e) => {
+  const toggleLabels = () => {
     state.labels = !state.labels;
-    e.currentTarget.setAttribute("aria-pressed", state.labels);
+    ["btn-labels", "tool-labels"].forEach((id) => $(id).setAttribute("aria-pressed", state.labels));
     viewer.setLabels(state.labels);
   };
+  $("btn-labels").onclick = toggleLabels;
+  $("tool-labels").onclick = toggleLabels;
+  $("tool-reset").onclick = () => viewer.resetView();
+
+  /* ---------- enlarge / fullscreen ----------
+   * The 3D view fills the whole window (works everywhere, including iPhones). Where the browser allows it,
+   * the real Fullscreen API is used on top of that so the browser's own bars disappear as well. */
+  const stage = document.querySelector(".stage");
+  const reqFs = stage.requestFullscreen || stage.webkitRequestFullscreen;
+  const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
+  const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+  let enlarged = false;
+  async function setEnlarged(on) {
+    enlarged = on;
+    stage.classList.toggle("expanded", on);
+    document.documentElement.classList.toggle("stage-open", on);
+    $("btn-full").setAttribute("aria-pressed", on);
+    $("btn-full").title = $("btn-full").ariaLabel = on ? "Exit fullscreen" : "Fullscreen";
+    try {
+      if (on && reqFs && !fsElement()) await reqFs.call(stage, { navigationUI: "hide" });
+      else if (!on && fsElement() && exitFs) await exitFs.call(document);
+    } catch (e) { /* the full-window view still works */ }
+    viewer.resize();
+  }
+  $("btn-full").onclick = () => setEnlarged(!enlarged);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && enlarged) setEnlarged(false); });
+  ["fullscreenchange", "webkitfullscreenchange"].forEach((ev) => document.addEventListener(ev, () => { if (enlarged && !fsElement()) setEnlarged(false); }));
   $("btn-share").onclick = async () => {
     try { await navigator.clipboard.writeText(location.href); toast("Link copied"); }
     catch { toast("Copy the address bar URL"); }
