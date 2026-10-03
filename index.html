@@ -12,6 +12,7 @@
   <header class="top">
     <div class="brand"><span class="mark">▞</span> KIT<b>BUILDER</b></div>
     <nav id="categories" class="tabs" aria-label="Weapon categories"></nav>
+    <button id="btn-range" class="btn range-btn" title="Test this build at the shooting range"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg><span>Go to the shooting range</span></button>
     <div class="actions">
       <button id="btn-reset" class="btn ghost">Reset</button>
       <button id="btn-share" class="btn">Copy link</button>
@@ -92,11 +93,40 @@
     </aside>
   </main>
 
+  <div id="range" class="range" hidden>
+    <div class="range-view" data-r="view"></div>
+    <div class="range-hud">
+      <div class="rh-top">
+        <button class="btn" data-r="exit">&larr; Back to the builder</button>
+        <strong class="rh-title" data-r="title"></strong>
+        <span class="rh-sp"></span>
+        <button class="rh-icon" data-r="reset" title="Stand the steel plates back up" aria-label="Reset plates"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
+        <button class="rh-icon" data-r="sound" aria-pressed="false" title="Sound on / off" aria-label="Sound"><svg class="i-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg><svg class="i-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></button>
+      </div>
+      <div class="rh-cross" data-r="cross"><i></i></div>
+      <div class="rh-info">
+        <div><span class="k">Ammo</span><b data-r="ammo"></b></div>
+        <div><span class="k">Mode</span><b data-r="mode"></b></div>
+        <div><span class="k">Shots</span><b data-r="shots">0</b></div>
+        <div><span class="k">Plates</span><b data-r="plates">0</b></div>
+      </div>
+      <div class="rh-click">Click to aim &amp; shoot<small>Mouse: look · left = fire · right = aim · R reload · B fire mode · Esc leave</small></div>
+      <div class="rh-touch">
+        <button class="rh-btn small" data-r="modebtn">Mode</button>
+        <button class="rh-btn small" data-r="reload">Reload</button>
+        <button class="rh-btn" data-r="aim" aria-pressed="false">Aim</button>
+        <button class="rh-btn fire" data-r="fire">Fire</button>
+      </div>
+      <div class="rh-loading" data-r="loading" hidden></div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" role="status"></div>
   <script type="importmap">
   { "imports": { "three": "./js/vendor/three.module.min.js", "three/addons/": "./js/vendor/addons/" } }
   </script>
   <script src="data/data.js"></script>
+  <script src="shooting-range/range-config.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

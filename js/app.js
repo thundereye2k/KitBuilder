@@ -1,4 +1,5 @@
 import { Viewer, LOOKS } from "./viewer.js";
+import { Range } from "./range.js";
 
 (() => {
   const D = window.KITBUILDER_DATA;
@@ -554,6 +555,20 @@ import { Viewer, LOOKS } from "./viewer.js";
     a.download = `${w.id}-build.json`;
     a.click();
     URL.revokeObjectURL(a.href);
+  };
+
+  /* ---------- shooting range ---------- */
+  const range = new Range(viewer, $("range"));
+  window.kitbuilderRange = range;
+  range.onExit = () => { $("btn-range").focus({ preventScroll: true }); };
+  $("btn-range").onclick = async () => {
+    await queue;   // let a part that is still loading finish
+    if (photoOn) exitPhoto();
+    if (enlarged) await setEnlarged(false);
+    const exp = viewer.exportWeapon();
+    if (!exp) { toast("The weapon is still loading"); return; }
+    const muzzle = state.parts.muzzle;
+    range.enter({ weapon: weapon(), stats: computeStats(), muzzleDevice: muzzle || null, object: exp.object, muzzle: exp.muzzle, sight: exp.sight });
   };
 
   window.addEventListener("hashchange", () => { if (location.hash.slice(1) !== lastHash) readHash(); });

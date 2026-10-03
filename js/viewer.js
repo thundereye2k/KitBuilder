@@ -278,6 +278,50 @@ export class Viewer {
     this.refreshMarkers();
   }
 
+  /** Stop / restart rendering (the shooting range takes over the screen). */
+  setPaused(on) {
+    this.renderer.setAnimationLoop(on ? null : () => this.frame());
+    if (!on) this.resize();
+  }
+
+  /**
+   * A clean copy of the current build for the shooting range: no slot markers, no selection outlines.
+   * `muzzle` is where the BBs leave the gun (far end of the barrel / muzzle device on the bore axis), in the weapon's own frame.
+   */
+  exportWeapon() {
+    if (!this.body) return null;
+    this.body.updateMatrixWorld(true);
+    const removed = [];
+    const detach = (o) => { if (o.parent) { removed.push([o.parent, o]); o.parent.remove(o); } };
+    for (const id in this.slots) {
+      const s = this.slots[id];
+      detach(s.marker);
+      if (s.partObj) { const l = []; s.partObj.traverse((o) => { if (o.userData.isOutline) l.push(o); }); l.forEach(detach); }
+    }
+    if (this.slots.optic && this.slots.optic.partObj) this.slots.optic.partObj.traverse((o) => { if (o.isMesh) o.userData.isOptic = true; });
+    const object = this.body.clone(true);
+    removed.forEach(([p, o]) => p.add(o));
+    object.position.set(0, 0, 0); object.quaternion.identity(); object.scale.set(1, 1, 1);
+
+    const inv = new THREE.Matrix4().copy(this.body.matrixWorld).invert();
+    const box = new THREE.Box3(), tmp = new THREE.Box3();
+    let bore = null;
+    for (const id of ["barrel", "muzzle"]) {
+      const s = this.slots[id];
+      if (!s) continue;
+      if (!bore) bore = s.anchor.position.clone();
+      if (s.partObj) box.union(tmp.setFromObject(s.partObj).applyMatrix4(inv));
+    }
+    if (box.isEmpty()) box.setFromObject(this.body).applyMatrix4(inv);
+    const front = box.max.x;
+    const muzzle = [front, bore ? bore.y : (box.min.y + box.max.y) / 2, bore ? bore.z : 0];
+    // centre of the installed optic, in the weapon's frame: the range lines the eye up with it when aiming
+    const op = this.slots.optic;
+    let sight = null;
+    if (op && op.partObj) { const b = tmp.setFromObject(op.partObj).applyMatrix4(inv), c = b.getCenter(new THREE.Vector3()); sight = { x: c.x, z: c.z, ymin: b.min.y, ymax: b.max.y }; }
+    return { object, muzzle, sight, length: box.max.x - box.min.x };
+  }
+
   /**
    * Slots with `follows` (the muzzle) move along X to the far end of another slot's part (the barrel),
    * or sit at their default position when that slot is empty.

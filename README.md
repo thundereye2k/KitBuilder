@@ -101,3 +101,33 @@ node convert.js path/to/folder --scale 0.001 --up Z
 `--scale` converts units to metres (mm `0.001`, cm `0.01`, inch `0.0254`); `--up` sets the source up axis. OBJ cannot carry the `slot_*` empties, so add those in Blender (import the OBJ, add Empties, export GLB) or rely on the `anchor` values in `data.js`.
 
 Draco- and meshopt-compressed GLBs are supported (decoders are vendored in `js/vendor/addons/libs`).
+
+## Shooting range
+
+The **Go to the shooting range** button in the header takes the current build into `shooting-range/Shooting-range.glb` and puts the camera in booth 3, first person. The weapon is shown exactly as built (parts, rail positions); an installed optic is lined up automatically when aiming.
+
+| | PC | Phone / tablet |
+|---|---|---|
+| Start | click the view (the mouse is captured, Esc releases it) | just touch |
+| Look | mouse | drag one finger anywhere |
+| Fire | left mouse button (hold for full auto) or Space | **Fire** button (hold) |
+| Aim down sights | hold right mouse button, or **E** to toggle | **Aim** button |
+| Reload / fire mode | **R** / **B** | **Reload** / **Mode** buttons |
+| Leave | Esc (when the mouse is released) or the back button | back button |
+
+What happens when you shoot: a BB leaves the muzzle (so a longer barrel or a muzzle device moves the start point) and flies with gravity, air drag and hop-up lift, bounces off hard surfaces and leaves a mark where it lands. The six steel plates in front of the booth fall when hit and stand up again a few seconds after the last one fell. Every shot has a synthesised shot sound (nothing to download), a muzzle flash, and recoil that depends on the build: the weapon's `recoil` stat plus its parts decides how hard the weapon and the view kick, so a stock, grip or compensator really changes the feel. A suppressor makes the shot quiet and nearly flash-free.
+
+### Configuration — `shooting-range/range-config.js`
+
+Everything is a plain number you can edit; no build step. Sections:
+
+- `model`, `modelFix`: the range GLB (and an optional scale / rotation / offset).
+- `camera`: standing position, start direction, field of view, look limits, mouse / touch sensitivity, breathing sway.
+- `lighting`: exposure, image based light, fill lights, fog.
+- `impact`: BB marks, bounce, little dust puffs. `muzzleFlash`: size, duration, colour, light.
+- `muzzleDevices`: flash / volume / dullness per muzzle part id (`suppressor`, `compensator`, `flash-hider`, `none`).
+- `sound`: master volume, reverb, optional recorded `shotFile` / `reloadFile` (put them in `shooting-range/sounds/`), impact volumes.
+- `plates`: the steel plates (positions, size, how long until they reset).
+- `profiles`: the values that differ per gun: `bb` (velocity, mass, diameter, gravity, drag coefficient, hop-up, spread, convergence, pellets), `fire` (rpm, modes, magazine size, reload time, pump action), `recoil`, `sound` (the synthesised shot), `viewmodel` (where the weapon sits in front of the camera, hip and aiming). A gun uses `profiles.default`, overridden by `profiles["<category id>"]`, overridden by `profiles["<weapon id>"]`.
+
+Tip: for a gun that sits wrongly in view, add `"<weapon id>": { viewmodel: { position: [x, y, z], rotation: [pitch, yaw, roll] } }` to `profiles` (camera space: +X right, +Y up, -Z forward; the weapon origin is the receiver).
