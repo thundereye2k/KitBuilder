@@ -207,3 +207,18 @@ html.stage-open,html.stage-open body{overflow:hidden}
 .stage.expanded .view-tools{top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right))}
 .stage.expanded .view-mode{bottom:max(10px,env(safe-area-inset-bottom));right:max(10px,env(safe-area-inset-right))}
 .stage.expanded .hint{bottom:max(8px,env(safe-area-inset-bottom));left:max(10px,env(safe-area-inset-left))}
+
+/* parts drawer inside the enlarged / fullscreen 3D view */
+.view-tools .tool-wide{width:auto;padding:0 12px;gap:6px;display:none;grid-auto-flow:column;align-items:center;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.stage.expanded .view-tools .tool-wide{display:grid}
+.stage.expanded .parts{position:absolute;z-index:5;margin:0;align-self:auto;overflow:auto;overscroll-behavior:contain;border-radius:0;background:var(--panel);transition:transform .25s ease;box-shadow:0 0 24px rgba(0,0,0,.5)}
+.stage.expanded .parts .part-list{max-height:none;overflow:visible}
+.stage.expanded.drawer-open .parts{transform:none}
+@media (orientation:landscape){   /* PC and landscape phones: from the left */
+  .stage.expanded .parts{top:0;left:0;bottom:0;width:min(360px,46vw);border:0;border-right:1px solid var(--line);transform:translateX(-105%);padding-left:max(14px,env(safe-area-inset-left))}
+}
+@media (orientation:portrait){    /* phones held upright: slides up from the bottom */
+  .stage.expanded .parts{left:0;right:0;bottom:0;max-height:55vh;max-height:55dvh;border:0;border-top:1px solid var(--line);border-radius:14px 14px 0 0;transform:translateY(105%);padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  .stage.expanded.drawer-open .view-mode{bottom:calc(var(--sheet-h,0px) + 10px)}
+  .stage.expanded.drawer-open .hint{display:none}
+}

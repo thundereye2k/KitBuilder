@@ -100,6 +100,8 @@ export class Viewer {
     this.hovered = null;
     this.onSlotClick = () => {};
     this.token = 0;
+    this.inset = { left: 0, bottom: 0 };      // screen area covered by the parts drawer (px)
+    this.insetCur = { left: 0, bottom: 0 };
     this.outlineRes = new THREE.Vector2(1, 1); // CSS pixel size of the view, shared by all outline materials
 
     const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, stencil: true }));
@@ -398,6 +400,22 @@ export class Viewer {
   setLabels(on) { this.showLabels = on; }
   resetView() { this.fit(); }
 
+  /** Keep the weapon centred in the part of the view that is not covered by the parts drawer. */
+  setInset(left, bottom) { this.inset = { left, bottom }; }
+
+  applyInset(force) {
+    const c = this.insetCur, t = this.inset;
+    const step = (a, b) => (Math.abs(b - a) < 0.5 ? b : a + (b - a) * 0.25);   // glide instead of jumping
+    const left = step(c.left, t.left), bottom = step(c.bottom, t.bottom);
+    if (!force && left === c.left && bottom === c.bottom) return;
+    c.left = left; c.bottom = bottom;
+    const w = this.container.clientWidth, h = this.container.clientHeight;
+    if (!w || !h) return;
+    this.camera.zoom = (w - left) / w;   // a side drawer also makes the weapon a bit smaller so it still fits
+    if (left < 0.5 && bottom < 0.5) { this.camera.zoom = 1; this.camera.clearViewOffset(); }
+    else this.camera.setViewOffset(w, h, -left / 2, bottom / 2, w, h);
+  }
+
   /** What a plain drag does: "rotate" the weapon or "move" the view (right mouse button / two fingers always move it). */
   setMode(mode) {
     this.mode = mode;
@@ -522,6 +540,7 @@ export class Viewer {
     this.lastAspect = aspect;
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
+    this.applyInset(true);
     if (reframe) this.fit();
   }
 
@@ -565,6 +584,7 @@ export class Viewer {
   }
 
   frame() {
+    this.applyInset(false);
     this.controls.update();
     if (this.panBox) {   // keep the point we look at near the weapon so it cannot be lost off screen
       const t = this.controls.target, c = t.clone().clamp(this.panBox.min, this.panBox.max);

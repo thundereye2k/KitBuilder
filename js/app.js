@@ -170,7 +170,7 @@ import { Viewer } from "./viewer.js";
   /* ---------- 3D board ---------- */
   const viewer = new Viewer($("viewport"), $("labels"));
   window.kitbuilderViewer = viewer; // handy for debugging in the console
-  viewer.onSlotClick = (id) => { state.slot = id; render(); };
+  viewer.onSlotClick = (id) => { state.slot = id; render(); if (enlarged) setDrawer(true); };
 
   let loadSeq = 0;
   async function loadWeapon3D() {
@@ -379,12 +379,37 @@ import { Viewer } from "./viewer.js";
   const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
   const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
   let enlarged = false;
+
+  /* While enlarged, the parts panel moves into the view and becomes a drawer:
+   * slides up from the bottom on portrait screens (phones), in from the left otherwise (PC, landscape). */
+  const partsEl = document.querySelector(".parts");
+  let partsHome = null;
+  function dockParts(on) {
+    if (on && !partsHome) { partsHome = { parent: partsEl.parentNode, next: partsEl.nextSibling }; stage.appendChild(partsEl); }
+    else if (!on && partsHome) { partsHome.parent.insertBefore(partsEl, partsHome.next); partsHome = null; }
+  }
+  function updateInset() {
+    const open = enlarged && stage.classList.contains("drawer-open");
+    const portrait = matchMedia("(orientation: portrait)").matches;
+    viewer.setInset(open && !portrait ? partsEl.offsetWidth : 0, open && portrait ? partsEl.offsetHeight : 0);
+    stage.style.setProperty("--sheet-h", open && portrait ? partsEl.offsetHeight + "px" : "0px");
+  }
+  function setDrawer(open) {
+    stage.classList.toggle("drawer-open", open);
+    $("tool-parts").setAttribute("aria-pressed", open);
+    updateInset();
+  }
+  $("tool-parts").onclick = () => setDrawer(!stage.classList.contains("drawer-open"));
+  new ResizeObserver(updateInset).observe(partsEl);   // drawer content changes size (e.g. the rail slider appears)
+  window.addEventListener("resize", updateInset);
   async function setEnlarged(on) {
     enlarged = on;
     stage.classList.toggle("expanded", on);
     document.documentElement.classList.toggle("stage-open", on);
     $("btn-full").setAttribute("aria-pressed", on);
     $("btn-full").title = $("btn-full").ariaLabel = on ? "Exit fullscreen" : "Fullscreen";
+    dockParts(on);
+    if (!on) setDrawer(false);
     try {
       if (on && reqFs && !fsElement()) await reqFs.call(stage, { navigationUI: "hide" });
       else if (!on && fsElement() && exitFs) await exitFs.call(document);
