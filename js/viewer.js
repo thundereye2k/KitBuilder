@@ -416,15 +416,6 @@ export class Viewer {
     else this.camera.setViewOffset(w, h, -left / 2, bottom / 2, w, h);
   }
 
-  /** What a plain drag does: "rotate" the weapon or "move" the view (right mouse button / two fingers always move it). */
-  setMode(mode) {
-    this.mode = mode;
-    const move = mode === "move";
-    this.controls.mouseButtons.LEFT = move ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
-    this.controls.touches.ONE = move ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
-    this.renderer.domElement.style.cursor = move ? "move" : "grab";
-  }
-
   /* ---------- internals ---------- */
   clear() {
     this.slots = {};
@@ -577,7 +568,7 @@ export class Viewer {
       const id = this.pick(e);
       if (id !== this.hovered) {
         this.hovered = id;
-        el.style.cursor = id ? "pointer" : this.mode === "move" ? "move" : "grab";
+        el.style.cursor = id ? "pointer" : "grab";
         this.refreshMarkers();
       }
     });

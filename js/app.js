@@ -354,13 +354,6 @@ import { Viewer } from "./viewer.js";
   }
 
   $("btn-view").onclick = () => viewer.resetView();
-  const setMode = (m) => {
-    viewer.setMode(m);
-    $("mode-rotate").classList.toggle("on", m === "rotate"); $("mode-rotate").setAttribute("aria-pressed", m === "rotate");
-    $("mode-move").classList.toggle("on", m === "move");     $("mode-move").setAttribute("aria-pressed", m === "move");
-  };
-  $("mode-rotate").onclick = () => setMode("rotate");
-  $("mode-move").onclick = () => setMode("move");
   $("btn-reset").onclick = () => selectWeapon(state.weaponId);
   const toggleLabels = () => {
     state.labels = !state.labels;
@@ -392,7 +385,6 @@ import { Viewer } from "./viewer.js";
     const open = enlarged && stage.classList.contains("drawer-open");
     const portrait = matchMedia("(orientation: portrait)").matches;
     viewer.setInset(open && !portrait ? partsEl.offsetWidth : 0, open && portrait ? partsEl.offsetHeight : 0);
-    stage.style.setProperty("--sheet-h", open && portrait ? partsEl.offsetHeight + "px" : "0px");
   }
   function setDrawer(open) {
     stage.classList.toggle("drawer-open", open);
