@@ -78,9 +78,9 @@ window.KITBUILDER_DATA = {
         { id: "muzzle",   type: "muzzle",    name: "Muzzle",      anchor: { pos: [0.34, 0, 0], rot: [0, 0, 0], size: [0.088, 0.032, 0.04] }, follows: { slot: "barrel", offset: -0.01 }, default: "flash-hider" },
         { id: "handguard",type: "handguard", name: "Handguard",   anchor: { pos: [0.1, 0.006, 0], rot: [0, 0, 0], size: [0.24, 0.048, 0.06] }, default: "hg-polymer" },
         { id: "optic",    type: "optic",     name: "Optic",       anchor: { pos: [0, 0.03, 0], rot: [0, 0, 0], size: [0.152, 0.064, 0.045] }, rail: { min: -0.097, max: 0.1, extend: "handguard" } },
-        { id: "flashlight", type: "flashlight",  name: "Flashlight", anchor: { pos: [0.2, 0.02, 0.03], rot: [0, 0, 0], size: [0.072, 0.0288, 0.03] } },
-        { id: "laser", type: "laser",  name: "Laser", anchor: { pos: [0.2, 0.02, -0.03], rot: [0, 0, 0], size: [0.072, 0.0288, 0.03] } },
-        { id: "underbarrel", type: "underbarrel", name: "Underbarrel", anchor: { pos: [0.2, -0.018, 0], rot: [0, 0, 0], size: [0.064, 0.08, 0.03] } },
+        { id: "flashlight", type: "flashlight",  name: "Flashlight", anchor: { pos: [0.33, 0, 0.0255], rot: [90, 0, 0], size: [0.072, 0.029, 0.03] } },
+        { id: "laser", type: "laser",  name: "Laser", anchor: { pos: [0.33, 0, -0.0255], rot: [-90, 0, 0], size: [0.072, 0.029, 0.03] } },
+        { id: "underbarrel", type: "underbarrel", name: "Underbarrel", anchor: { pos: [0.29, -0.0325, 0], rot: [0, 0, 0], size: [0.064, 0.08, 0.03] } },
         { id: "grip",     type: "grip",      name: "Pistol Grip", anchor: { pos: [-0.092, -0.0303, 0], rot: [0, 0, 0], size: [0.064, 0.088, 0.04] }, default: "grip-a2" },
         { id: "magazine", type: "magazine",  name: "Magazine",    anchor: { pos: [0.035, -0.01, 0], rot: [0, 0, 0], size: [0.064, 0.112, 0.035] }, default: "pmag-30" },
         { id: "stock",    type: "stock",     name: "Stock",       anchor: { pos: [-0.104, -0.0072, 0], rot: [0, 0, 0], size: [0.216, 0.088, 0.05] }, default: "stock-fixed" }
