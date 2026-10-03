@@ -171,6 +171,7 @@ import { Viewer } from "./viewer.js";
   const viewer = new Viewer($("viewport"), $("labels"));
   window.kitbuilderViewer = viewer; // handy for debugging in the console
   viewer.onSlotClick = (id) => { state.slot = id; render(); if (enlarged) setDrawer(true); };
+  viewer.onEmptyClick = () => deselect();   // click on free space: clean view
 
   let loadSeq = 0;
   async function loadWeapon3D() {
@@ -183,6 +184,13 @@ import { Viewer } from "./viewer.js";
     viewer.setActive(state.slot);
     renderRail();
     writeHash();
+  }
+
+  function deselect() {
+    if (state.slot == null) return;
+    state.slot = null;
+    render();
+    if (typeof enlarged !== "undefined" && enlarged) setDrawer(false);   // fullscreen: also tuck the drawer away
   }
 
   /* ---------- panels ---------- */
@@ -268,7 +276,22 @@ import { Viewer } from "./viewer.js";
 
   function renderParts() {
     const w = weapon();
-    const slot = w.slots.find((s) => s.id === state.slot) || w.slots[0];
+    const slot = w.slots.find((s) => s.id === state.slot);
+    if (!slot) {   // nothing selected
+      $("parts-title").textContent = "Select a slot";
+      $("parts-title").title = "";
+      const tabs = $("slot-tabs");
+      tabs.innerHTML = "";
+      w.slots.forEach((s) => {
+        const c = document.createElement("button");
+        c.className = "chip" + (state.parts[s.id] ? " filled" : "");
+        c.textContent = s.name;
+        c.onclick = () => { state.slot = s.id; render(); };
+        tabs.appendChild(c);
+      });
+      $("part-list").innerHTML = '<li class="empty">Pick a slot above, or click a part on the weapon.</li>';
+      return;
+    }
     $("parts-title").textContent = slot.name;
     $("parts-title").title = `models/parts/${D.slotTypes[slot.type].folder}/`;
 
@@ -409,7 +432,7 @@ import { Viewer } from "./viewer.js";
     viewer.resize();
   }
   $("btn-full").onclick = () => setEnlarged(!enlarged);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && enlarged) setEnlarged(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (enlarged) setEnlarged(false); else deselect(); } });
   ["fullscreenchange", "webkitfullscreenchange"].forEach((ev) => document.addEventListener(ev, () => { if (enlarged && !fsElement()) setEnlarged(false); }));
   $("btn-share").onclick = async () => {
     try { await navigator.clipboard.writeText(location.href); toast("Link copied"); }

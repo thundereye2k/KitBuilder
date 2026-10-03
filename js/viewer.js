@@ -99,6 +99,7 @@ export class Viewer {
     this.showLabels = false;
     this.hovered = null;
     this.onSlotClick = () => {};
+    this.onEmptyClick = () => {};   // click on free space (nothing hit)
     this.token = 0;
     this.inset = { left: 0, bottom: 0 };      // screen area covered by the parts drawer (px)
     this.insetCur = { left: 0, bottom: 0 };
@@ -496,14 +497,17 @@ export class Viewer {
   }
 
   refreshMarkers() {
+    const clean = this.activeSlot == null;   // nothing selected: hide the hint boxes of empty slots too
     for (const id in this.slots) {
       const s = this.slots[id];
       const active = id === this.activeSlot, hover = id === this.hovered, empty = !s.part;
       const filled = !!s.partObj;
       const fill = filled ? 0 : active ? 0.12 : hover ? 0.18 : 0;
-      const line = filled ? 0 : active || hover ? 1 : 0.45;
+      const line = filled ? 0 : active || hover ? 1 : clean ? 0 : 0.45;
       s.marker.material.opacity = fill;
       s.marker.userData.edges.material.opacity = line;
+      // invisible boxes must not catch clicks (a click on free space has to reach "deselect")
+      s.marker.raycast = filled || (clean && !hover) ? () => {} : THREE.Mesh.prototype.raycast;
       if (filled && s.outlineMat) this.setOutline(s, active || hover);
       s.label.classList.toggle("on", active);
     }
@@ -558,7 +562,7 @@ export class Viewer {
     el.addEventListener("pointerup", (e) => {
       if (down && !multi && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) {
         const id = this.pick(e);
-        if (id) this.onSlotClick(id);
+        if (id) this.onSlotClick(id); else this.onEmptyClick();
       }
       down = null;
       end(e);

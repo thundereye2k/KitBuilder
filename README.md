@@ -25,6 +25,7 @@ Or deploy the folder as-is to GitHub Pages / Netlify / Cloudflare Pages / any st
 | Rotate | left mouse drag | one finger |
 | Move the view | **right mouse drag** (or Shift + left drag) | **two fingers** drag |
 | Zoom | scroll wheel (or middle-drag) | pinch |
+| Deselect (clean view) | click / tap free space (or Esc) | tap free space |
 | Reset | "Reset view" button | "Reset view" button |
 | Parts while fullscreen | **Parts** button: panel slides in from the left | **Parts** button: panel slides up from the bottom (landscape: from the left) |
 | Fullscreen | button in the top-right corner of the view (Esc to leave) | same button (works on iPhones too) |
