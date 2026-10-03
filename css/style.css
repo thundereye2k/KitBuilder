@@ -244,3 +244,5 @@ html.stage-open,html.stage-open body{overflow:hidden}
 .pp-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
 .pp-check{flex:1 1 100%;font-size:13px;color:var(--muted)}
 .pp-actions .btn{min-height:42px;padding:0 16px}
+.pp-floor{margin-top:6px;flex:none}
+.pp-row input:disabled{opacity:.35}

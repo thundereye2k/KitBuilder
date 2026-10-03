@@ -469,11 +469,16 @@ import { Viewer, LOOKS } from "./viewer.js";
   function syncPanel(L) {
     SLIDERS.forEach(([id, k, d]) => { $(id).value = L[k]; $(id + "-v").textContent = Number(L[k]).toFixed(d); });
     drawDial(L.az, L.el);
+    const look = LOOKS[lookName];
+    $("pp-floor").checked = L.floor !== false;
+    $("pp-floor").disabled = !look.shadow;                                  // the Default look has no floor shadow
+    $("pp-blur").disabled = !(look.bg && look.bg.startsWith("scene:"));     // only the painted backdrops have blur
   }
   SLIDERS.forEach(([id, k, d]) => $(id).addEventListener("input", (e) => {
     viewer.setLight({ [k]: parseFloat(e.target.value) });
     $(id + "-v").textContent = Number(e.target.value).toFixed(d);
   }));
+  $("pp-floor").addEventListener("change", (e) => viewer.setLight({ floor: e.target.checked }));
   const dial = $("pp-dial");
   const dialMove = (e) => {
     const r = dial.getBoundingClientRect();
