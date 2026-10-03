@@ -472,7 +472,7 @@ import { Viewer, LOOKS } from "./viewer.js";
     const look = LOOKS[lookName];
     $("pp-floor").checked = L.floor !== false;
     $("pp-floor").disabled = !look.shadow;                                  // the Default look has no floor shadow
-    $("pp-blur").disabled = !(look.bg && look.bg.startsWith("scene:"));     // only the painted backdrops have blur
+    $("pp-blur").disabled = look.bg !== "env";     // only the environment-photo looks have a blurred backdrop
   }
   SLIDERS.forEach(([id, k, d]) => $(id).addEventListener("input", (e) => {
     viewer.setLight({ [k]: parseFloat(e.target.value) });

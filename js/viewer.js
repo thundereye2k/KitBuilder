@@ -5,7 +5,6 @@ import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
-import { drawBackdrop } from "./backdrops.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
 const DEG = Math.PI / 180;
@@ -13,16 +12,15 @@ const ACCENT = 0xe8a33d;
 const OUTLINE_PX = 2.5; // thickness of the selection outline, in screen pixels
 
 /* Looks for photo mode. bg: null = transparent (page colour), "#hex" = plain colour, "env" = the blurred environment photo.
- * (bg "scene:name" = a backdrop painted in backdrops.js, blur = its softness 0..1; the environment photo only lights the weapon)
  * light.az / el = where the key light is (degrees, az 0 = from the side the camera starts on), key / env = light and
  * ambient strength, warm = -1 (cool) .. 1 (warm), blur = background blur. */
 export const LOOKS = {
   default:  { name: "Default",  bg: null,      env: "room",     grid: true,  shadow: false, light: { az: 37, el: 45, key: 1.6, env: 1,    exposure: 1, warm: 0,    blur: 0.5, floor: true } },
   studio:   { name: "Studio",   bg: "#f2f2f2", env: "room",     grid: false, shadow: true,  light: { az: 40, el: 55, key: 2.6, env: 1.15, exposure: 1, warm: 0,    blur: 0.5, floor: true } },
-  forest:   { name: "Forest",   bg: "scene:forest",   env: "forest",   grid: false, shadow: true,  light: { az: 30, el: 50, key: 2.2, env: 1.2,  exposure: 1, warm: 0.15, blur: 0.5, floor: true } },
-  sunset:   { name: "Sunset",   bg: "scene:sunset",   env: "sunset",   grid: false, shadow: true,  light: { az: 60, el: 20, key: 2.8, env: 1,    exposure: 1, warm: 0.6,  blur: 0.5, floor: true } },
-  workshop: { name: "Workshop", bg: "scene:workshop", env: "workshop", grid: false, shadow: true,  light: { az: 20, el: 60, key: 1.8, env: 1.1,  exposure: 1, warm: 0.1,  blur: 0.5, floor: true } },
-  city:     { name: "City",     bg: "scene:city",     env: "city",     grid: false, shadow: true,  light: { az: 50, el: 45, key: 2,   env: 1,    exposure: 1, warm: 0,    blur: 0.5, floor: true } }
+  forest:   { name: "Forest",   bg: "env",     env: "forest",   grid: false, shadow: true,  light: { az: 30, el: 50, key: 2.2, env: 1.2,  exposure: 1, warm: 0.15, blur: 0.05, floor: true } },
+  sunset:   { name: "Sunset",   bg: "env",     env: "sunset",   grid: false, shadow: true,  light: { az: 60, el: 20, key: 2.8, env: 1,    exposure: 1, warm: 0.6,  blur: 0.06, floor: true } },
+  workshop: { name: "Workshop", bg: "env",     env: "workshop", grid: false, shadow: true,  light: { az: 20, el: 60, key: 1.8, env: 1.1,  exposure: 1, warm: 0.1,  blur: 0.1, floor: true } },
+  city:     { name: "City",     bg: "env",     env: "city",     grid: false, shadow: true,  light: { az: 50, el: 45, key: 2,   env: 1,    exposure: 1, warm: 0,    blur: 0.08, floor: true } }
 };
 
 /* Which way a placeholder grows from its mount point (anchor origin). */
@@ -470,42 +468,17 @@ export class Viewer {
     this.lookName = name;
     this.scene.environment = envTex;
     this.lookShadow = look.shadow;
-    this.backdrop = look.bg && look.bg.startsWith("scene:") ? look.bg.slice(6) : null;
+    this.scene.background = look.bg === "env" ? bgTex : look.bg ? new THREE.Color(look.bg) : null;
     this.light = { ...look.light };
-    if (this.backdrop) this.rebuildBackdrop();
-    else this.scene.background = look.bg ? new THREE.Color(look.bg) : null;
     this.grid.visible = look.grid;
     this.key.castShadow = look.shadow;
     this.applyLight();
     return { ...this.light };
   }
 
-  /** Paint the backdrop for the current aspect ratio (it is drawn at a modest size and stretched: it is out of focus anyway). */
-  rebuildBackdrop() {
-    if (!this.backdrop) return;
-    const w = this.container.clientWidth, h = this.container.clientHeight;
-    if (!w || !h) return;
-    const W = 768, H = Math.max(64, Math.round((W * h) / w));
-    const tex = new THREE.CanvasTexture(drawBackdrop(this.backdrop, W, H, this.light.blur));
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.minFilter = tex.magFilter = THREE.LinearFilter;
-    tex.generateMipmaps = false;
-    const old = this.scene.background;
-    this.scene.background = tex;
-    this.backdropAspect = w / h;
-    if (old && old.isCanvasTexture) old.dispose();
-  }
-
-  scheduleBackdrop() {
-    if (!this.backdrop) return;
-    clearTimeout(this.backdropTimer);
-    this.backdropTimer = setTimeout(() => this.rebuildBackdrop(), 120);
-  }
-
   /** Change any of az, el (key light direction, degrees), key, env, exposure, warm, blur. */
   setLight(partial) {
     Object.assign(this.light, partial);
-    if ("blur" in partial) this.scheduleBackdrop();
     this.applyLight();
   }
 
@@ -529,7 +502,7 @@ export class Viewer {
     c.lerp(new THREE.Color(L.warm >= 0 ? 0xffc48f : 0xb9d4ff), Math.abs(L.warm));
     this.key.color.copy(c);
     this.scene.environmentIntensity = L.env;
-    this.scene.backgroundBlurriness = 0;
+    this.scene.backgroundBlurriness = L.blur;
     this.ground.visible = !!this.lookShadow && L.floor !== false;
     this.renderer.toneMappingExposure = L.exposure;
     this.ground.position.y = minY - 0.02;
@@ -686,7 +659,6 @@ export class Viewer {
     // layout changed a lot (rotation, breakpoint): reframe so the weapon is not cropped
     const reframe = this.lastAspect && Math.abs(aspect - this.lastAspect) / this.lastAspect > 0.15 && this.root.children.length;
     this.lastAspect = aspect;
-    if (this.backdrop && Math.abs(aspect / (this.backdropAspect || aspect) - 1) > 0.02) this.scheduleBackdrop();
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
     this.applyInset(true);

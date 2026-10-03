@@ -36,9 +36,9 @@ The view can be moved up to about 30 cm past the weapon, so it can't be lost off
 
 The camera button in the corner of the 3D view opens photo mode (it enlarges the view first and puts it back when closed). It hides the selection outlines and boxes and offers:
 
-- **Environment**: Default, Studio (white photo booth), Forest, Sunset, Workshop, City. Each look lights the weapon with a CC0 environment photo from Poly Haven (`assets/env/`, see `LICENSE.txt` there, loaded when first picked). The Forest, Sunset, Workshop and City backdrops are painted in code (`js/backdrops.js`) at any size, so they stay smooth on any screen.
+- **Environment**: Default, Studio (white photo booth), Forest, Sunset, Workshop, City. The Forest, Sunset, Workshop and City looks use an equirectangular `.exr` from `assets/env/` (CC0 Poly Haven images, see `LICENSE.txt` there) both for the lighting and as the blurred backdrop; they load when first picked. Replace the files with higher-resolution ones for a sharper backdrop.
 - **Light position**: drag the dot on the dial (centre = from above, edge = low from the side); the light casts a real shadow.
-- **Lighting**: light strength, ambient, exposure, warmth, backdrop blur and a **Floor shadow** switch (the weapon still shades itself when it is off).
+- **Lighting**: light strength, ambient, exposure, warmth, backdrop blur (environment looks) and a **Floor shadow** switch (the weapon still shades itself when it is off).
 - **Save photo**: PNG of the current view, optionally at 2x resolution.
 
 Looks and their start values are in `LOOKS` at the top of `js/viewer.js`; to add an environment, put an equirectangular `.exr` in `assets/env/` and add an entry there.
