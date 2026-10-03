@@ -616,6 +616,7 @@ export class Viewer {
     mesh.position.set(dir[0] * sx / 2, dir[1] * sy / 2, 0);
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0 }));
     mesh.add(edges);
+    mesh.castShadow = mesh.receiveShadow = edges.castShadow = edges.receiveShadow = false;
     mesh.userData.edges = edges;
     mesh.userData.defaultBox = { size: new THREE.Vector3(sx, sy, sz), center: mesh.position.clone() };
     return mesh;
@@ -632,9 +633,10 @@ export class Viewer {
       const line = filled ? 0 : active || hover ? 1 : clean ? 0 : 0.45;
       s.marker.material.opacity = fill;
       s.marker.userData.edges.material.opacity = line;
+      s.marker.visible = !this.photo;   // photo mode: the hint boxes are removed completely, not just faded
       // invisible boxes must not catch clicks (a click on free space has to reach "deselect")
       s.marker.raycast = filled || (clean && !hover) ? () => {} : THREE.Mesh.prototype.raycast;
-      if (filled && s.outlineMat) this.setOutline(s, active || hover);
+      if (filled && s.outlineMat) this.setOutline(s, !this.photo && (active || hover));
       s.label.classList.toggle("on", active);
     }
   }
