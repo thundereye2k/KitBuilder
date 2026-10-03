@@ -32,6 +32,17 @@ Or deploy the folder as-is to GitHub Pages / Netlify / Cloudflare Pages / any st
 
 The view can be moved up to about 30 cm past the weapon, so it can't be lost off screen.
 
+## Photo mode
+
+The camera button in the corner of the 3D view opens photo mode (it enlarges the view first and puts it back when closed). It hides the selection outlines and boxes and offers:
+
+- **Environment**: Default, Studio (white photo booth), Forest, Sunset, Workshop, City. The four photo backdrops are CC0 HDRIs from Poly Haven (`assets/env/`, see `LICENSE.txt` there) loaded when first picked.
+- **Light position**: drag the dot on the dial (centre = from above, edge = low from the side); the light casts a real shadow.
+- **Lighting**: light strength, ambient, exposure, warmth and backdrop blur.
+- **Save photo**: PNG of the current view, optionally at 2x resolution.
+
+Looks and their start values are in `LOOKS` at the top of `js/viewer.js`; to add an environment, put an equirectangular `.exr` in `assets/env/` and add an entry there.
+
 ## Sliding parts along a rail
 
 A slot with a `rail` in `data/data.js` gets a **Position on rail** slider (plus ◀ ▶ nudge buttons and "Reset position") in the parts panel once a part is installed. Currently the optic slot of every weapon has one.

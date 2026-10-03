@@ -34,8 +34,36 @@
         <div class="actions"><button id="btn-view" class="btn ghost">Reset view</button><button id="btn-labels" class="btn ghost" aria-pressed="false">Slot labels</button></div>
       </div>
       <div class="stage"><div id="viewport" class="viewport"></div><div id="labels" class="labels"></div>
+        <div id="photo-panel" class="photo-panel" hidden role="dialog" aria-label="Photo mode">
+          <div class="pp-head"><strong>Photo mode</strong><button id="pp-close" aria-label="Close photo mode">&times;</button></div>
+          <div class="pp-sec"><h3>Environment</h3><div id="pp-looks" class="pp-looks"></div></div>
+          <div class="pp-sec"><h3>Light position</h3>
+            <div class="pp-dial-row">
+              <svg id="pp-dial" viewBox="-60 -60 120 120" aria-label="Light position: drag">
+                <circle r="50" class="d-ring"/><circle r="33" class="d-ring"/><circle r="17" class="d-ring"/>
+                <path d="M-50 0H50M0 -50V50" class="d-cross"/>
+                <text y="-52" class="d-lbl" text-anchor="middle">back</text><text y="58" class="d-lbl" text-anchor="middle">front</text>
+                <circle id="pp-sun" r="7" class="d-sun"/>
+              </svg>
+              <p class="pp-note">Drag the dot. Centre = light from above, edge = low light from the side.<br><b id="pp-pos">0° · 0°</b></p>
+            </div>
+          </div>
+          <div class="pp-sec"><h3>Lighting</h3>
+            <label class="pp-row"><span>Light</span><input id="pp-key" type="range" min="0" max="6" step="0.05"><output id="pp-key-v"></output></label>
+            <label class="pp-row"><span>Ambient</span><input id="pp-env" type="range" min="0" max="3" step="0.05"><output id="pp-env-v"></output></label>
+            <label class="pp-row"><span>Exposure</span><input id="pp-exp" type="range" min="0.3" max="2.5" step="0.05"><output id="pp-exp-v"></output></label>
+            <label class="pp-row"><span>Warmth</span><input id="pp-warm" type="range" min="-1" max="1" step="0.05"><output id="pp-warm-v"></output></label>
+            <label class="pp-row"><span>Backdrop blur</span><input id="pp-blur" type="range" min="0" max="1" step="0.05"><output id="pp-blur-v"></output></label>
+          </div>
+          <div class="pp-actions">
+            <label class="pp-check"><input id="pp-hires" type="checkbox" checked> High resolution (2&times;)</label>
+            <button id="pp-save" class="btn">Save photo</button>
+            <button id="pp-reset" class="btn ghost">Reset look</button>
+          </div>
+        </div>
         <div class="view-tools">
           <button id="tool-parts" class="tool-wide" title="Parts" aria-label="Parts" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Parts</span></button>
+          <button id="tool-photo" title="Photo mode" aria-label="Photo mode" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
           <button id="tool-reset" title="Reset view" aria-label="Reset view"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
           <button id="tool-labels" title="Slot labels" aria-label="Slot labels" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12 12 20 4 12V4h8z"/><circle cx="8.5" cy="8.5" r="1.2"/></svg></button>
           <button id="btn-full" title="Fullscreen" aria-label="Fullscreen" aria-pressed="false"><svg class="i-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i-exit" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>

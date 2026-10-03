@@ -1,4 +1,4 @@
-import { Viewer } from "./viewer.js";
+import { Viewer, LOOKS } from "./viewer.js";
 
 (() => {
   const D = window.KITBUILDER_DATA;
@@ -405,8 +405,12 @@ import { Viewer } from "./viewer.js";
     else if (!on && partsHome) { partsHome.parent.insertBefore(partsEl, partsHome.next); partsHome = null; }
   }
   function updateInset() {
-    const open = enlarged && stage.classList.contains("drawer-open");
     const portrait = matchMedia("(orientation: portrait)").matches;
+    if (photoOn) {   // photo panel: bottom sheet on portrait screens, card on the right otherwise
+      viewer.setInset(0, portrait ? photoEl.offsetHeight : 0, portrait ? 0 : photoEl.offsetWidth + 20);
+      return;
+    }
+    const open = enlarged && stage.classList.contains("drawer-open");
     viewer.setInset(open && !portrait ? partsEl.offsetWidth : 0, open && portrait ? partsEl.offsetHeight : 0);
   }
   function setDrawer(open) {
@@ -418,6 +422,7 @@ import { Viewer } from "./viewer.js";
   new ResizeObserver(updateInset).observe(partsEl);   // drawer content changes size (e.g. the rail slider appears)
   window.addEventListener("resize", updateInset);
   async function setEnlarged(on) {
+    if (!on && photoOn) exitPhoto(false);
     enlarged = on;
     stage.classList.toggle("expanded", on);
     document.documentElement.classList.toggle("stage-open", on);
@@ -434,6 +439,97 @@ import { Viewer } from "./viewer.js";
   $("btn-full").onclick = () => setEnlarged(!enlarged);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (enlarged) setEnlarged(false); else deselect(); } });
   ["fullscreenchange", "webkitfullscreenchange"].forEach((ev) => document.addEventListener(ev, () => { if (enlarged && !fsElement()) setEnlarged(false); }));
+
+  /* ---------- photo mode ----------
+   * Needs room, so it enlarges the view first (and puts it back when closed). Hides every selection aid,
+   * lets the visitor pick an environment, move the key light and save a PNG. */
+  const photoEl = $("photo-panel");
+  let photoOn = false, photoAutoEnlarged = false, lookName = "studio";
+  const SWATCH = {
+    default: "#14171c", studio: "#f2f2f2",
+    forest: "linear-gradient(160deg,#78a35f,#1f321b)", sunset: "linear-gradient(160deg,#f3a85b,#5d3a73)",
+    workshop: "linear-gradient(160deg,#a39784,#34302b)", city: "linear-gradient(160deg,#93b4d3,#2f4056)"
+  };
+  Object.entries(LOOKS).forEach(([id, l]) => {
+    const b = document.createElement("button");
+    b.className = "pp-look"; b.dataset.look = id;
+    b.innerHTML = `<i style="background:${SWATCH[id]}"></i><span>${l.name}</span>`;
+    b.onclick = () => selectLook(id);
+    $("pp-looks").appendChild(b);
+  });
+
+  const SLIDERS = [["pp-key", "key", 1], ["pp-env", "env", 2], ["pp-exp", "exposure", 2], ["pp-warm", "warm", 2], ["pp-blur", "blur", 2]];
+  const DIAL_R = 50;
+  function drawDial(az, el) {
+    const rr = DIAL_R * (1 - (el - 5) / 85), a = (az * Math.PI) / 180;
+    $("pp-sun").setAttribute("cx", (rr * Math.sin(a)).toFixed(1));
+    $("pp-sun").setAttribute("cy", (rr * Math.cos(a)).toFixed(1));
+    $("pp-pos").textContent = `${Math.round(az)}° around · ${Math.round(el)}° up`;
+  }
+  function syncPanel(L) {
+    SLIDERS.forEach(([id, k, d]) => { $(id).value = L[k]; $(id + "-v").textContent = Number(L[k]).toFixed(d); });
+    drawDial(L.az, L.el);
+  }
+  SLIDERS.forEach(([id, k, d]) => $(id).addEventListener("input", (e) => {
+    viewer.setLight({ [k]: parseFloat(e.target.value) });
+    $(id + "-v").textContent = Number(e.target.value).toFixed(d);
+  }));
+  const dial = $("pp-dial");
+  const dialMove = (e) => {
+    const r = dial.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 120 - 60, y = ((e.clientY - r.top) / r.height) * 120 - 60;
+    const d = Math.min(Math.hypot(x, y), DIAL_R);
+    const el = 90 - (d / DIAL_R) * 85;
+    const az = d < 2 ? viewer.light.az : (((Math.atan2(x, y) * 180) / Math.PI) + 360) % 360;
+    viewer.setLight({ az, el });
+    drawDial(az, el);
+  };
+  dial.addEventListener("pointerdown", (e) => { dial.setPointerCapture(e.pointerId); dialMove(e); });
+  dial.addEventListener("pointermove", (e) => { if (dial.hasPointerCapture(e.pointerId)) dialMove(e); });
+
+  async function selectLook(id) {
+    lookName = id;
+    document.querySelectorAll(".pp-look").forEach((b) => b.classList.toggle("on", b.dataset.look === id));
+    const L = await viewer.setLook(id);
+    if (L) syncPanel(L);
+  }
+  async function enterPhoto() {
+    if (photoOn) return;
+    photoAutoEnlarged = !enlarged;
+    if (!enlarged) await setEnlarged(true);
+    setDrawer(false);
+    photoOn = true;
+    stage.classList.add("photo-open");
+    photoEl.hidden = false;
+    $("tool-photo").setAttribute("aria-pressed", true);
+    viewer.setPhoto(true);
+    updateInset();
+    await selectLook(lookName);
+  }
+  function exitPhoto(leaveEnlarged = true) {
+    photoOn = false;
+    stage.classList.remove("photo-open");
+    photoEl.hidden = true;
+    $("tool-photo").setAttribute("aria-pressed", false);
+    viewer.setPhoto(false);
+    viewer.setLook("default");
+    updateInset();
+    if (leaveEnlarged && photoAutoEnlarged) { photoAutoEnlarged = false; setEnlarged(false); }
+  }
+  $("tool-photo").onclick = () => (photoOn ? exitPhoto() : enterPhoto());
+  $("pp-close").onclick = () => exitPhoto();
+  $("pp-reset").onclick = () => selectLook(lookName);
+  $("pp-save").onclick = async () => {
+    const blob = await viewer.savePhoto($("pp-hires").checked ? 2 : 1);
+    if (!blob) { toast("Could not save the photo"); return; }
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `kitbuilder-${weapon().id}-${lookName}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+    toast("Photo saved");
+  };
+  new ResizeObserver(updateInset).observe(photoEl);
   $("btn-share").onclick = async () => {
     try { await navigator.clipboard.writeText(location.href); toast("Link copied"); }
     catch { toast("Copy the address bar URL"); }

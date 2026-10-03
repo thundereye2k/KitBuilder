@@ -4,11 +4,24 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
 const DEG = Math.PI / 180;
 const ACCENT = 0xe8a33d;
 const OUTLINE_PX = 2.5; // thickness of the selection outline, in screen pixels
+
+/* Looks for photo mode. bg: null = transparent (page colour), "#hex" = plain colour, "env" = the blurred environment photo.
+ * light.az / el = where the key light is (degrees, az 0 = from the side the camera starts on), key / env = light and
+ * ambient strength, warm = -1 (cool) .. 1 (warm), blur = background blur. */
+export const LOOKS = {
+  default:  { name: "Default",  bg: null,      env: "room",     grid: true,  shadow: false, light: { az: 37, el: 45, key: 1.6, env: 1,    exposure: 1, warm: 0,    blur: 0 } },
+  studio:   { name: "Studio",   bg: "#f2f2f2", env: "room",     grid: false, shadow: true,  light: { az: 40, el: 55, key: 2.6, env: 1.15, exposure: 1, warm: 0,    blur: 0 } },
+  forest:   { name: "Forest",   bg: "env",     env: "forest",   grid: false, shadow: true,  light: { az: 30, el: 50, key: 2.2, env: 1.2,  exposure: 1, warm: 0.15, blur: 0.05 } },
+  sunset:   { name: "Sunset",   bg: "env",     env: "sunset",   grid: false, shadow: true,  light: { az: 60, el: 20, key: 2.8, env: 1,    exposure: 1, warm: 0.6,  blur: 0.06 } },
+  workshop: { name: "Workshop", bg: "env",     env: "workshop", grid: false, shadow: true,  light: { az: 20, el: 60, key: 1.8, env: 1.1,  exposure: 1, warm: 0.1,  blur: 0.1 } },
+  city:     { name: "City",     bg: "env",     env: "city",     grid: false, shadow: true,  light: { az: 50, el: 45, key: 2,   env: 1,    exposure: 1, warm: 0,    blur: 0.08 } }
+};
 
 /* Which way a placeholder grows from its mount point (anchor origin). */
 const GROW = {
@@ -101,8 +114,8 @@ export class Viewer {
     this.onSlotClick = () => {};
     this.onEmptyClick = () => {};   // click on free space (nothing hit)
     this.token = 0;
-    this.inset = { left: 0, bottom: 0 };      // screen area covered by the parts drawer (px)
-    this.insetCur = { left: 0, bottom: 0 };
+    this.inset = { left: 0, bottom: 0, right: 0 };      // screen area covered by the parts drawer (px)
+    this.insetCur = { left: 0, bottom: 0, right: 0 };
     this.outlineRes = new THREE.Vector2(1, 1); // CSS pixel size of the view, shared by all outline materials
 
     const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, stencil: true }));
@@ -112,11 +125,30 @@ export class Viewer {
     container.appendChild(r.domElement);
 
     this.scene = new THREE.Scene();
-    const pmrem = new THREE.PMREMGenerator(r);
-    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    const key = new THREE.DirectionalLight(0xffffff, 1.6);
+    this.pmrem = new THREE.PMREMGenerator(r);
+    this.roomEnv = this.pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.scene.environment = this.roomEnv;
+    const key = (this.key = new THREE.DirectionalLight(0xffffff, 1.6));
     key.position.set(0.6, 1, 0.8);
     this.scene.add(key);
+    this.scene.add(key.target);
+    // shadows are only cast in photo looks (key.castShadow is switched by setLook)
+    r.shadowMap.enabled = true;
+    r.shadowMap.type = THREE.PCFSoftShadowMap;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.bias = -0.0004;
+    key.shadow.normalBias = 0.002;
+    key.shadow.radius = 3;
+    this.light = { ...LOOKS.default.light };
+    this.lookName = "default";
+    this.photo = false;
+    this.envCache = new Map();
+    this.exr = new EXRLoader();
+    this.ground = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.ShadowMaterial({ opacity: 0.38 }));
+    this.ground.rotation.x = -Math.PI / 2;
+    this.ground.receiveShadow = true;
+    this.ground.visible = false;
+    this.scene.add(this.ground);
 
     this.camera = new THREE.PerspectiveCamera(32, 2, 0.01, 20);
     this.controls = new OrbitControls(this.camera, r.domElement);
@@ -129,7 +161,7 @@ export class Viewer {
     this.controls.minDistance = 0.25;
     this.controls.maxDistance = 3;
 
-    const grid = new THREE.GridHelper(2, 40, 0x3a4350, 0x262c35);
+    const grid = (this.grid = new THREE.GridHelper(2, 40, 0x3a4350, 0x262c35));
     grid.position.y = -0.2;
     this.scene.add(grid);
 
@@ -175,6 +207,7 @@ export class Viewer {
       (weapon.hide || []).forEach((name) => { const n = gltfRoot.getObjectByName(name); if (n) n.visible = false; });
       body.add(wrap);
     } else body.add(this.placeholderBody(weapon.category, weapon.slots.some((s) => s.type === "barrel")));
+    this.markShadows(body);
     body.updateMatrixWorld(true);
 
     weapon.slots.forEach((def) => {
@@ -235,6 +268,7 @@ export class Viewer {
         obj = this.placeholder(s.def.type, size, part.color || "#52525b");
       }
       obj.traverse((o) => { if (o.isMesh) o.userData.slotId = slotId; });
+      this.markShadows(obj);
       s.anchor.add(obj);
       s.partObj = obj;
       this.addOutline(s);
@@ -401,20 +435,110 @@ export class Viewer {
   setLabels(on) { this.showLabels = on; }
   resetView() { this.fit(); }
 
+
+  /* ---------- photo mode: looks, light, saving ---------- */
+  markShadows(obj) {
+    obj.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  }
+
+  async loadEnv(name) {
+    if (!this.envCache.has(name)) {
+      const url = new URL(`../assets/env/${name}.exr`, import.meta.url).href;
+      this.envCache.set(name, this.exr.loadAsync(url).then((tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        return { env: this.pmrem.fromEquirectangular(tex).texture, bg: tex };
+      }));
+    }
+    return this.envCache.get(name);
+  }
+
+  /** Switch the environment. Resolves with the look's default light settings (null if superseded by a newer call). */
+  async setLook(name) {
+    const look = LOOKS[name] || LOOKS.default;
+    const token = (this.lookToken = (this.lookToken || 0) + 1);
+    let envTex = this.roomEnv, bgTex = null;
+    if (look.env !== "room") {
+      this.status.textContent = "Loading…";
+      this.status.style.display = "block";
+      try { const e = await this.loadEnv(look.env); envTex = e.env; bgTex = e.bg; }
+      catch (err) { console.warn(`Environment failed: ${look.env}`, err); }
+      this.status.style.display = "none";
+      if (token !== this.lookToken) return null;
+    }
+    this.lookName = name;
+    this.scene.environment = envTex;
+    this.scene.background = look.bg === "env" ? bgTex : look.bg ? new THREE.Color(look.bg) : null;
+    this.grid.visible = look.grid;
+    this.ground.visible = look.shadow;
+    this.key.castShadow = look.shadow;
+    this.light = { ...look.light };
+    this.applyLight();
+    return { ...this.light };
+  }
+
+  /** Change any of az, el (key light direction, degrees), key, env, exposure, warm, blur. */
+  setLight(partial) {
+    Object.assign(this.light, partial);
+    this.applyLight();
+  }
+
+  applyLight() {
+    const L = this.light, a = L.az * DEG, e = L.el * DEG;
+    let ctr = new THREE.Vector3(), rad = 0.5, minY = -0.2;
+    if (this.body) {
+      this.body.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(this.body);
+      if (!box.isEmpty()) { ctr = box.getCenter(new THREE.Vector3()); rad = box.getBoundingSphere(new THREE.Sphere()).radius; minY = box.min.y; }
+    }
+    const dist = 2;
+    this.key.position.set(ctr.x + dist * Math.sin(a) * Math.cos(e), ctr.y + dist * Math.sin(e), ctr.z + dist * Math.cos(a) * Math.cos(e));
+    this.key.target.position.copy(ctr);
+    this.key.target.updateMatrixWorld();
+    const cam = this.key.shadow.camera, r = rad * 1.15;
+    cam.left = -r; cam.right = r; cam.top = r; cam.bottom = -r; cam.near = dist - r * 1.3; cam.far = dist + r * 1.3;
+    cam.updateProjectionMatrix();
+    this.key.intensity = L.key;
+    const c = new THREE.Color(0xffffff);
+    c.lerp(new THREE.Color(L.warm >= 0 ? 0xffc48f : 0xb9d4ff), Math.abs(L.warm));
+    this.key.color.copy(c);
+    this.scene.environmentIntensity = L.env;
+    this.scene.backgroundBlurriness = L.blur;
+    this.renderer.toneMappingExposure = L.exposure;
+    this.ground.position.y = minY - 0.02;
+  }
+
+  /** Photo mode hides every selection aid (outlines, hint boxes, labels) and ignores clicks on parts. */
+  setPhoto(on) {
+    this.photo = on;
+    this.refreshMarkers();
+  }
+
+  /** PNG of the current view; scale > 1 renders at higher resolution (capped at 4096 px on the long side). */
+  savePhoto(scale = 1) {
+    const r = this.renderer, w = this.container.clientWidth, h = this.container.clientHeight, pr = r.getPixelRatio();
+    const k = Math.min(scale, 4096 / (Math.max(w, h) * pr));
+    return new Promise((resolve) => {
+      r.setPixelRatio(pr * k);
+      r.setSize(w, h, false);
+      r.render(this.scene, this.camera);
+      r.domElement.toBlob((blob) => { r.setPixelRatio(pr); r.setSize(w, h, false); resolve(blob); }, "image/png");
+    });
+  }
+
   /** Keep the weapon centred in the part of the view that is not covered by the parts drawer. */
-  setInset(left, bottom) { this.inset = { left, bottom }; }
+  setInset(left, bottom, right = 0) { this.inset = { left, bottom, right }; }
 
   applyInset(force) {
     const c = this.insetCur, t = this.inset;
     const step = (a, b) => (Math.abs(b - a) < 0.5 ? b : a + (b - a) * 0.25);   // glide instead of jumping
-    const left = step(c.left, t.left), bottom = step(c.bottom, t.bottom);
-    if (!force && left === c.left && bottom === c.bottom) return;
-    c.left = left; c.bottom = bottom;
+    const left = step(c.left, t.left), bottom = step(c.bottom, t.bottom), right = step(c.right, t.right);
+    if (!force && left === c.left && bottom === c.bottom && right === c.right) return;
+    c.left = left; c.bottom = bottom; c.right = right;
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (!w || !h) return;
-    this.camera.zoom = (w - left) / w;   // a side drawer also makes the weapon a bit smaller so it still fits
-    if (left < 0.5 && bottom < 0.5) { this.camera.zoom = 1; this.camera.clearViewOffset(); }
-    else this.camera.setViewOffset(w, h, -left / 2, bottom / 2, w, h);
+    this.camera.zoom = (w - left - right) / w;   // a side drawer also makes the weapon a bit smaller so it still fits
+    if (left < 0.5 && bottom < 0.5 && right < 0.5) { this.camera.zoom = 1; this.camera.clearViewOffset(); }
+    else this.camera.setViewOffset(w, h, (right - left) / 2, bottom / 2, w, h);
   }
 
   /* ---------- internals ---------- */
@@ -497,10 +621,11 @@ export class Viewer {
   }
 
   refreshMarkers() {
-    const clean = this.activeSlot == null;   // nothing selected: hide the hint boxes of empty slots too
+    const activeId = this.photo ? null : this.activeSlot, hoverId = this.photo ? null : this.hovered;
+    const clean = activeId == null;   // nothing selected: hide the hint boxes of empty slots too
     for (const id in this.slots) {
       const s = this.slots[id];
-      const active = id === this.activeSlot, hover = id === this.hovered, empty = !s.part;
+      const active = id === activeId, hover = id === hoverId, empty = !s.part;
       const filled = !!s.partObj;
       const fill = filled ? 0 : active ? 0.12 : hover ? 0.18 : 0;
       const line = filled ? 0 : active || hover ? 1 : clean ? 0 : 0.45;
@@ -560,7 +685,7 @@ export class Viewer {
     const end = (e) => { pointers.delete(e.pointerId); if (!pointers.size) multi = false; };
     el.addEventListener("pointercancel", end);
     el.addEventListener("pointerup", (e) => {
-      if (down && !multi && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) {
+      if (down && !multi && !this.photo && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) {
         const id = this.pick(e);
         if (id) this.onSlotClick(id); else this.onEmptyClick();
       }
@@ -568,7 +693,7 @@ export class Viewer {
       end(e);
     });
     el.addEventListener("pointermove", (e) => {
-      if (e.buttons) return;
+      if (e.buttons || this.photo) return;
       const id = this.pick(e);
       if (id !== this.hovered) {
         this.hovered = id;
@@ -594,7 +719,7 @@ export class Viewer {
       // label sits at the middle of the slot marker
       s.marker.getWorldPosition(v);
       v.project(this.camera);
-      const visible = v.z < 1 && (this.showLabels || id === this.activeSlot || id === this.hovered);
+      const visible = !this.photo && v.z < 1 && (this.showLabels || id === this.activeSlot || id === this.hovered);
       s.label.style.opacity = visible ? 1 : 0;
       s.label.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -140%)`;
     }

@@ -1,0 +1,2 @@
+Environment maps (forest, sunset, workshop, city): Poly Haven HDRIs (https://polyhaven.com/hdris), licensed CC0 (public domain),
+resized to 512x512 and converted to EXR by the @pmndrs/assets package.
